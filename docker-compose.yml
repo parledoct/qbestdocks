@@ -1,0 +1,94 @@
+version: '3.4'
+
+services:
+    minio:
+        container_name: minio-s3-storage
+        image: "minio/minio"
+        ports:
+            - "9000:9000"
+        environment:
+            - MINIO_ACCESS_KEY=minio
+            - MINIO_SECRET_KEY=minio123
+        command: server /data
+        networks:
+            - network
+
+    postgres:
+        container_name: postgres-database
+        image: postgres:10.5
+        restart: always
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+        ports:
+            - '5432:5432'
+        networks:
+            - network
+
+    broker:
+        container_name: message-broker
+        image: rabbitmq:3.8.2-management-alpine
+        environment: 
+            - RABBITMQ_USER=guest
+            - RABBITMQ_PASS=guest
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        networks:
+            - network
+
+    audio:
+        build: ./src/workers
+        container_name: audio-workers
+        environment:
+            - RABBITMQ_HOST=broker
+            - RABBITMQ_PORT=5672
+            - RABBITMQ_USER=guest
+            - RABBITMQ_PASS=guest
+            - MINIO_HOST=minio
+            - MINIO_PORT=9000
+            - MINIO_ACCESS_KEY=minio
+            - MINIO_SECRET_KEY=minio123
+            - POSTGRES_HOST=postgres
+            - POSTGRES_PORT=5432
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+        links:
+            - broker:broker
+            - minio:minio
+        networks:
+            - network
+        command: celery -A audio.tasks worker --loglevel=INFO
+
+    api:
+        build: ./src/api
+        container_name: api
+        environment:
+            - RABBITMQ_HOST=broker
+            - RABBITMQ_PORT=5672
+            - RABBITMQ_USER=guest
+            - RABBITMQ_PASS=guest
+            - MINIO_HOST=minio
+            - MINIO_PORT=9000
+            - MINIO_ACCESS_KEY=minio
+            - MINIO_SECRET_KEY=minio123
+            - POSTGRES_HOST=postgres
+            - POSTGRES_PORT=5432
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+        links:
+            - broker:broker
+            - minio:minio
+        ports:
+            - "5000:5000"
+        networks:
+            - network
+        volumes:
+            - ${PWD}/src/api:/api
+
+networks:
+    network: {}
