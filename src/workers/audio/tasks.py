@@ -7,19 +7,13 @@ from pydub import AudioSegment
 from celery import Celery 
 from time import sleep
 
-from broker import get_broker_url
+import common.resources.database
+import common.resources.crud
+from common.resources.s3 import get_s3_client
+from common.resources.broker import get_broker_url
 
 audio = Celery("audio", broker=get_broker_url())
-
-from minio import Minio
-from minio.error import S3Error
-
-minio_host    = os.getenv("MINIO_HOST", "127.0.0.1")
-postgres_host = os.getenv("POSTGRES_HOST", "127.0.0.1")
-postgres_port = 5438 if postgres_host == "127.0.0.1" else 5432
-
-s3 = Minio(f"{minio_host}:9000", access_key="minio", secret_key="minio123", secure=False)
-db  = psycopg2.connect(user="postgres", password="postgres", host=postgres_host, port=postgres_port)
+s3    = get_s3_client()
 
 @audio.task
 def check_test_regions(file_id):

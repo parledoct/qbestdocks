@@ -1,45 +1,48 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, UploadFile, Query, Request, HTTPException
-from fastapi.responses import Response, StreamingResponse
+from fastapi import APIRouter, Depends, Request, HTTPException
 
 from typing import List
-from core.schemas.annotations import AnnotationIn, AnnotationOut
+from schemas.annotations import AnnotationIn, AnnotationOut
 
 from sqlalchemy.orm import Session
-from core.models import crud, models, database
+from common.resources.database.conn import get_db
+import common.resources.database.crud as crud
 
 router = APIRouter()
 
 @router.get("/", summary="Get annotation(s) associated with identifier", response_model=List[AnnotationOut], status_code=201)
-async def get_annotations(request: Request, file_id: str = None, annotation_id: str = None, db: Session = Depends(database.get_db)):
+async def get_annotations(request: Request, file_uuid: str = None, annot_uuid: str = None, db: Session = Depends(get_db)):
     """
-    Get annotation(s) by file or annotation identifier, supply *either* `file_id` or `annotation_id`.
+    Get annotation(s) by file or annotation identifier, supply *either* `file_uuid` or `annot_uuid`. Note an array of size 1 is returned
+    for when fetching via `annot_uuid`.
     """
 
-    if file_id is not None:
+    if file_uuid is None and annot_uuid is None:
+        raise HTTPException(status_code=400, detail=f"Neither file_uuid nor annot_uuid provided for retrieval.")
 
-        if not crud.file_exists(db, file_id):
-            raise HTTPException(status_code=404, detail=f"File by identifier '{file_id}' not found in files table.")    
+    if file_uuid is not None:
 
-        return crud.get_annotation(db, file_uuid=file_id)
+        if not crud.file_exists(db, file_uuid):
+            raise HTTPException(status_code=404, detail=f"File by identifier '{file_uuid}' not found in files table.")    
 
-    elif annotation_id is not None:
+        annotations = crud.get_file_annotations(db, file_uuid=file_uuid)
 
-        if not crud.annotation_exists(db, annotation_id):
-                raise HTTPException(status_code=404, detail=f"Annotation by identifier '{annotation_id}' not found in annotations table.")
+    elif annot_uuid is not None:
 
-        return crud.get_annotation(db, annot_uuid=annotation_id)
+        if not crud.annotation_exists(db, annot_uuid):
+                raise HTTPException(status_code=404, detail=f"Annotation by identifier '{annot_uuid}' not found in annotations table.")
 
-    else:
+        annotations = crud.get_annotations(db, annot_uuid=annot_uuid)
 
-        raise HTTPException(status_code=400, detail=f"Neither file_id nor annotation_id provided for retrieval.")
+    return [ AnnotationOut(**annotation.__dict__) for annotation in annotations ]
 
-@router.post("/update/{file_id}", summary="Update annotations by file id", response_model=List[AnnotationOut], status_code=201)
-async def update_annotations(request: Request, file_id: UUID, annotations: List[AnnotationIn], db: Session = Depends(database.get_db)):
+@router.post("/update/", summary="Update annotations", response_model=List[AnnotationOut], status_code=201)
+async def update_annotations(request: Request, annotations: List[AnnotationIn], db: Session = Depends(get_db)):
 
-    if not crud.file_exists(db, file_id):
-        raise HTTPException(status_code=404, detail=f"File by identifier '{file_id}' not found in files table.")    
+    """
+    Insert, update, or delete annotation(s). Parameters to be supplied as an array of annotations with a corresponding action.
+    """
 
     updated_annotations = []
 
@@ -47,30 +50,33 @@ async def update_annotations(request: Request, file_id: UUID, annotations: List[
 
         if a.action == "insert":
 
-            updated_annotations.append(
-                crud.create_annotation(db, file_id, a.start_sec, a.end_sec, a.annotation)
-            )
+            if not crud.file_exists(db, a.file_uuid):
+                raise HTTPException(status_code=404, detail=f"File by identifier '{a.file_uuid}' not found in files table.")    
+
+            new_annotation = crud.create_annotation(db, a.file_uuid, a.start_sec, a.end_sec, a.annotation)
+            a.annot_uuid   =  new_annotation.annot_uuid
 
         elif a.action == "update":
 
-            if not crud.annotation_exists(db, a.id):
-                raise HTTPException(status_code=404, detail=f"Annotation by identifier '{a.id}' not found in annotations table.")
+            if not crud.annotation_exists(db, a.annot_uuid):
+                raise HTTPException(status_code=404, detail=f"Annotation by identifier '{a.annot_uuid}' not found in annotations table.")
 
-            updated_annotations.append(
-                crud.update_annotation(db, a.id, a.start_sec, a.end_sec, a.annotation)
-            )
+            crud.update_annotation(db, a.annot_uuid, a.start_sec, a.end_sec, a.annotation)
 
         elif a.action == "delete":
 
-            if not crud.annotation_exists(db, a.id):
-                raise HTTPException(status_code=404, detail=f"Annotation by identifier '{a.id}' not found in annotations table.")    
+            if not crud.annotation_exists(db, a.annot_uuid):
+                raise HTTPException(status_code=404, detail=f"Annotation by identifier '{a.annot_uuid}' not found in annotations table.")    
 
-            updated_annotations.append(
-                crud.delete_annotation(db, a.id)
-            )
+            crud.delete_annotation(db, a.annot_uuid)
+            a.start_sec = -1
+            a.end_sec   = -1
+            a.annotation = "(annotation deleted)"
 
         else:
 
             raise HTTPException(status_code=400, detail=f"Action '{a.action}' not recognised.")
+
+        updated_annotations.append(a)
 
     return updated_annotations

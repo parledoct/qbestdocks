@@ -1,11 +1,10 @@
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, UnicodeText
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-
 import uuid
 import datetime
 
-from .database import Base
+from sqlalchemy import Column, DateTime, Float, ForeignKey, String, UnicodeText
+from sqlalchemy.dialects.postgresql import UUID
+
+from .conn import Base
 
 class File(Base):
     __tablename__ = "files"

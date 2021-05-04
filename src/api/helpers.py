@@ -1,11 +1,12 @@
 import hashlib
 from pydub import AudioSegment
 from os import path
+from uuid import UUID
 
-def wav_to_s3files(upload_path: str, file_id: str, output_path = "/tmp"):
+def wav_to_s3files(upload_path: str, file_id: UUID, output_path = "/tmp"):
     s = AudioSegment.from_wav(upload_path).set_channels(1).set_frame_rate(16000)
     
-    wav_path, mp3_path = [ path.join(output_path, file_id + ext) for ext in ["wav", "mp3"] ]
+    wav_path, mp3_path = [ path.join(output_path, str(file_id) + ext) for ext in [".wav", ".mp3"] ]
 
     s.export(wav_path, format="wav")
     s.export(mp3_path, format="mp3")
