@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.5'
 
 services:
     minio:
@@ -32,7 +32,7 @@ services:
     broker:
         container_name: message-broker
         image: rabbitmq:3.8.2-management-alpine
-        environment: 
+        environment:
             - RABBITMQ_USER=guest
             - RABBITMQ_PASS=guest
         ports:
@@ -89,6 +89,20 @@ services:
             - network
         volumes:
             - ${PWD}/src/api:/api
+
+    client:
+        build: ./src/client
+        container_name: client
+        environment:
+            - NODE_ENV=development
+        links:
+            - api:api
+        ports:
+            - "3000:3000"
+        networks:
+            - network
+        volumes:
+            - ${PWD}/src/client:/app
 
 networks:
     network: {}
