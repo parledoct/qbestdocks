@@ -5,6 +5,51 @@ from sqlalchemy.orm import Session
 
 from .models import File, Annotation, TestRegion, SearchJob, SearchResult
 
+def create_views(db: Session):
+    """
+    The table search_jobs stores the queries and files selected for a search job
+    as a PostgreSQL array column, e.g.:
+
+    | search_uuid | annot_uuids | file_uuids |
+    |      1      |   [1,2,3]   |   [5,6,7]  |
+
+    These views make it easy to access the annot_uuid or file_uuid as rows, e.g.:
+    | search_uuid | annot_uuid |
+    |      1      |      1     |
+    |      1      |      2     |
+    |      1      |      3     |
+    """
+
+    db.execute("""\
+        CREATE OR REPLACE VIEW search_tests AS
+            SELECT
+                s.search_uuid,
+                s.file_uuid,
+                t.test_uuid,
+                t.start_sec,
+                t.end_sec
+            FROM
+		        (SELECT *, unnest(file_uuids) AS file_uuid FROM search_jobs) s
+            LEFT JOIN test_regions t
+            ON s.file_uuid = t.file_uuid
+    """)
+
+    db.execute("""\
+        CREATE OR REPLACE VIEW search_annots AS
+        SELECT
+            s.search_uuid,
+            a.file_uuid,
+            s.annot_uuid,
+            a.start_sec,
+            a.end_sec
+        FROM
+		    (SELECT *, unnest(annot_uuids) AS annot_uuid FROM search_jobs) s
+        LEFT JOIN annotations a
+        ON s.annot_uuid = a.annot_uuid
+    """)
+
+    db.commit()
+
 #region Operations on files table
 def file_exists(db: Session, file_uuid: UUID):
     return db.query(File.file_uuid).filter_by(file_uuid=file_uuid).first() is not None
@@ -79,11 +124,8 @@ def get_unregioned_files(db: Session, search_uuid: str):
     # Get list of files for which audio activity regions have not yet been derived
     # i.e. files with no corresponding test_ids in the test_regions table
     results = db.execute(f"""\
-        SELECT s.file_uuid FROM
-            (SELECT unnest(file_uuids) AS file_uuid FROM search_jobs WHERE search_uuid = '{search_uuid}') s
-        LEFT JOIN
-            test_regions t ON t.file_uuid = s.file_uuid
-        WHERE test_uuid IS NULL
+        SELECT DISTINCT file_uuid FROM search_tests WHERE
+            test_uuid is NULL AND search_uuid = '{search_uuid}'
     """).fetchall()
 
     results = [ str(dict(row)['file_uuid']) for row in results ] if results is not None else [ ]
@@ -152,15 +194,11 @@ def get_all_segments(db: Session, search_uuid: str):
     # | segment_uuid (annot_uuid or test_uuid) | file_uuid | start_sec | end_sec |
 
     results = db.execute(f"""\
-        SELECT s.segment_uuid, a.file_uuid, a.start_sec, a.end_sec FROM 
-            (SELECT unnest(annot_uuids) AS segment_uuid FROM search_jobs WHERE search_uuid = '{search_uuid}') s
-        LEFT JOIN
-            annotations a ON s.segment_uuid = a.annot_uuid
-    UNION
-        SELECT t.test_uuid AS segment_uuid, t.file_uuid, t.start_sec, t.end_sec FROM 
-            (SELECT unnest(file_uuids) AS file_uuid FROM search_jobs WHERE search_uuid = '{search_uuid}') s
-        LEFT JOIN
-            test_regions t ON s.file_uuid = t.file_uuid
+        SELECT annot_uuid AS segment_uuid, file_uuid, start_sec, end_sec
+            FROM search_annots WHERE search_uuid = '{search_uuid}'
+        UNION
+            SELECT test_uuid AS segment_uuid, file_uuid, start_sec, end_sec
+                FROM search_tests WHERE search_uuid = '{search_uuid}' AND test_uuid IS NOT NULL
     """).fetchall()
 
     return results
@@ -173,19 +211,14 @@ def get_unsearched_pairs(db: Session, search_uuid: str):
     """
 
     results = db.execute(f"""\
-        SELECT c.annot_uuid, c.test_uuid FROM 
-            (SELECT annot_uuid, t.test_uuid FROM
-                (SELECT unnest(annot_uuids) AS annot_uuid FROM search_jobs WHERE search_uuid = '{search_uuid}') a
+        SELECT c.annot_uuid, c.test_uuid FROM (
+            (SELECT annot_uuid FROM search_annots WHERE search_uuid = '{search_uuid}') a
             CROSS JOIN
-            (SELECT t.test_uuid FROM
-                (SELECT unnest(file_uuids) AS file_uuid FROM search_jobs WHERE search_uuid = '{search_uuid}') s
-            LEFT JOIN
-                test_regions t ON s.file_uuid = t.file_uuid
-            ) t
+            (SELECT test_uuid FROM search_tests WHERE search_uuid = '{search_uuid}') t
         ) c
         LEFT JOIN
             search_results r ON c.annot_uuid = r.annot_uuid AND c.test_uuid = r.test_uuid
-            WHERE r.result_uuid IS NULL
+        WHERE r.result_uuid IS NULL
     """).fetchall()
 
     return results

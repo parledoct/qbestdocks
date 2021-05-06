@@ -3,7 +3,7 @@ from api.v1.api import api_router
 from celery import Celery 
 
 from common.resources.s3 import get_s3_client
-from common.resources.database.conn import Base, engine, SQLALCHEMY_DATABASE_URL
+from common.resources.database import conn, crud
 from common.resources.workers import get_celery_workers
 
 app = FastAPI(
@@ -37,8 +37,9 @@ async def startup():
     # Make buckets if they don't exist.
     [ app.state.s3client.make_bucket(b) for b in ["audio-wav", "audio-mp3", "features-npy"] if not app.state.s3client.bucket_exists(b) ]
 
-    # Create database tables if they don't exist
-    Base.metadata.create_all(bind=engine)
+    # Create database tables and views if they don't exist
+    conn.Base.metadata.create_all(bind=conn.engine)
+    crud.create_views(conn.SessionLocal())
 
     # Register Celery workers
     app.state.workers = get_celery_workers()
