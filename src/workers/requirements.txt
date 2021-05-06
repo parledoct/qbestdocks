@@ -1,5 +1,5 @@
 celery==5.0.5
-redis==3.5.3
+dtw-python==1.1.6
 psycopg2-binary==2.8.6
 minio==7.0.3
 auditok==0.2.0

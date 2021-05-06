@@ -31,7 +31,6 @@ class AnnotationOut(BaseModel):
     file_uuid: UUID
 
     class Config:
-        orm_mode = True
         # Example for OpenAPI documentation
         schema_extra = {
             "example": {
