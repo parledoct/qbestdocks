@@ -82,8 +82,9 @@ services:
             - "3000:3000"
         networks:
             - network
-        volumes:
-            - ${PWD}/src/client:/app
+        # Uncomment for front end dev work
+        # volumes:
+        #     - ${PWD}/src/client:/app
 
 networks:
     network: {}
