@@ -6,9 +6,8 @@ services:
         image: "minio/minio"
         ports:
             - "9000:9000"
-        environment:
-            - MINIO_ACCESS_KEY=minio
-            - MINIO_SECRET_KEY=minio123
+        env_file:
+            - docker-compose.env
         command: server /data
         networks:
             - network
@@ -17,9 +16,8 @@ services:
         container_name: postgres-database
         image: postgres:10.5
         restart: always
-        environment:
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
+        env_file:
+            - docker-compose.env
         logging:
             options:
                 max-size: 10m
@@ -32,9 +30,8 @@ services:
     broker:
         container_name: message-broker
         image: rabbitmq:3.8.2-management-alpine
-        environment:
-            - RABBITMQ_USER=guest
-            - RABBITMQ_PASS=guest
+        env_file:
+            - docker-compose.env
         ports:
             - "15672:15672"
             - "5672:5672"
@@ -44,42 +41,25 @@ services:
     audio:
         build: ./src/workers
         container_name: audio-workers
-        environment:
-            - RABBITMQ_HOST=broker
-            - RABBITMQ_PORT=5672
-            - RABBITMQ_USER=guest
-            - RABBITMQ_PASS=guest
-            - MINIO_HOST=minio
-            - MINIO_PORT=9000
-            - MINIO_ACCESS_KEY=minio
-            - MINIO_SECRET_KEY=minio123
-            - POSTGRES_HOST=postgres
-            - POSTGRES_PORT=5432
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
+        env_file:
+            - docker-compose.env
         links:
             - broker:broker
             - minio:minio
+        volumes:
+            - ${PWD}/src/workers/:/workers
+            - ${PWD}/src/common:/workers/common
         networks:
             - network
-        command: celery -A audio.tasks worker --loglevel=INFO
+        # command: celery -A audio.tasks worker --loglevel=INFO
+        # For development
+        command: watchmedo auto-restart --directory=audio --pattern=tasks.py --recursive -- celery -A audio.tasks worker --loglevel=INFO
 
     api:
         build: ./src/api
         container_name: api
-        environment:
-            - RABBITMQ_HOST=broker
-            - RABBITMQ_PORT=5672
-            - RABBITMQ_USER=guest
-            - RABBITMQ_PASS=guest
-            - MINIO_HOST=minio
-            - MINIO_PORT=9000
-            - MINIO_ACCESS_KEY=minio
-            - MINIO_SECRET_KEY=minio123
-            - POSTGRES_HOST=postgres
-            - POSTGRES_PORT=5432
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
+        env_file:
+            - docker-compose.env
         links:
             - broker:broker
             - minio:minio
@@ -89,6 +69,7 @@ services:
             - network
         volumes:
             - ${PWD}/src/api:/api
+            - ${PWD}/src/common:/api/common
 
     client:
         build: ./src/client

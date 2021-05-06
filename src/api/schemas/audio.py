@@ -3,11 +3,11 @@ from typing import List, Optional
 from uuid import UUID
 
 class FileStatus(BaseModel):
-    file_id: UUID
+    file_uuid: UUID
     upload_filename: str
     message: Optional[str] = None
 
-class UploadFileStatus(BaseModel):
+class FileStatusesOut(BaseModel):
 
     processed: List[FileStatus] = []
     skipped: List[FileStatus] = []
