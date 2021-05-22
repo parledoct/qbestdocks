@@ -13,13 +13,14 @@ WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 #RUN yarn build && yarn install --production --ignore-scripts --prefer-offline
+ENV NODE_ENV development
 RUN npm run build
 
 # Production image, copy all the files and run next
 FROM node:alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV development
 
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
@@ -30,6 +31,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/build ./build
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+
+RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
@@ -42,3 +45,4 @@ ENV NEXT_TELEMETRY_DISABLED 1
 
 #CMD ["yarn", "start"]
 CMD ["npm", "start"]
+#CMD ["npm", "run", "dev"]

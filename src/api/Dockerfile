@@ -15,4 +15,4 @@ COPY . /api
 
 EXPOSE 5000 6379 5672 9000
 
-CMD uvicorn main:app --host 0.0.0.0 --port 5000 --reload
+CMD uvicorn main:app_full --host 0.0.0.0 --port 5000 --reload

@@ -13,6 +13,22 @@ from celery.result import AsyncResult
 
 router = APIRouter()
 
+@router.get("/list", summary="List search jobs", response_model=List[SearchJob])
+async def get_all_jobs(request: Request, db: Session = Depends(get_db)):
+    """
+
+    """
+    jobs = crud.get_search_jobs(db)
+    return [ SearchJob(search_uuid=job.search_uuid, status=AsyncResult(str(job.search_uuid)).state) for job in jobs ]
+
+@router.get("/get/{search_uuid}", summary="List search jobs", response_model=SearchParameters)
+async def get_job(request: Request, search_uuid: UUID, db: Session = Depends(get_db)):
+    """
+
+    """
+    job = crud.get_search_job(db, search_uuid)
+    return SearchParameters(**job.__dict__)
+
 @router.post("/", summary="Create search job", response_model = SearchJob, status_code=201)
 async def create_search_job(request: Request, search_parameters: SearchParameters, db: Session = Depends(get_db)):
 

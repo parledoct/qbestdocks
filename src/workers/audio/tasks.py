@@ -8,7 +8,7 @@ from uuid import UUID
 from dtw import dtw, StepPattern
 from scipy.spatial.distance import cdist
 
-from celery import Celery 
+from celery import Celery
 from celery.utils.log import get_task_logger
 
 from sqlalchemy.orm import Session
@@ -148,17 +148,17 @@ def run_qbestd_search(search_uuid: str, window_step = 4):
         # reject if alignment less than half of query size
         # or if larger than 1.5 times query size
         min_match_ratio, max_match_ratio = [0.5, 1.5]
-    
+
         window_size      = int(query_length * max_match_ratio)
         last_segment_end = int(test_length - (min_match_ratio * query_length))
 
         for r_i in range(0, last_segment_end, window_step):
-            
+
             segment_start = r_i
             segment_end   = min(r_i + window_size, test_length)
 
             segment_data  = distance_matrix[:,segment_start:segment_end]
-            
+
             dtw_obj = dtw(segment_data,
                 step_pattern = "symmetricP1", # See Sakoe & Chiba (1978) for definition of step pattern
                 open_end = True,              # Let alignment end anywhere along the segment (need not be at lower corner)
@@ -178,10 +178,10 @@ def run_qbestd_search(search_uuid: str, window_step = 4):
         # makes it easier to compare with CNN output probabilities
         #
         # Return 0 if segdtw_dists is [] (i.e. no good alignments found)
-        sim_score = 0 if len(segdtw_dists) == 0 else 1 - min(segdtw_dists)
+        sim_score = np.int64(0) if len(segdtw_dists) == 0 else 1 - min(segdtw_dists)
 
-        min_index = np.argmin(segdtw_dists)
-        match_len = segdtw_mlens[min_index]
+        min_index = np.argmin(segdtw_dists) if len(segdtw_dists) > 0 else np.int64(0)
+        match_len = segdtw_mlens[min_index] if len(segdtw_dists) > 0 else np.float64(0)
 
         # Convert matched region to proportion of test length
         # e.g. match portion from 10% - 15% of time span

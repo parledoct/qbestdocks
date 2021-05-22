@@ -51,6 +51,9 @@ def create_views(db: Session):
     db.commit()
 
 #region Operations on files table
+def get_files(db: Session):
+    return db.query(File).all()
+
 def file_exists(db: Session, file_uuid: UUID):
     return db.query(File.file_uuid).filter_by(file_uuid=file_uuid).first() is not None
 
@@ -74,6 +77,9 @@ def create_file(db: Session, file_md5hash: str, upload_filename: str):
 #endregion
 
 #region Operations on annotations table
+def get_annotations(db: Session):
+    return db.query(Annotation).all()
+
 def annotation_exists(db: Session, annot_uuid: str):
     return db.query(Annotation.annot_uuid).filter_by(annot_uuid=annot_uuid).first() is not None
 
@@ -154,6 +160,12 @@ def create_test_region(db: Session, file_uuid: UUID, start_sec: float, end_sec: 
 #endregion
 
 #region Operations on search_jobs table
+def get_search_jobs(db: Session):
+    return db.query(SearchJob).all()
+
+def get_search_job(db: Session, search_uuid: UUID):
+    return db.query(SearchJob).filter_by(search_uuid=search_uuid).first()
+
 def create_search_job(db: Session, annot_uuids: List[UUID], file_uuids: List[UUID]):
     new_job = SearchJob(
         search_uuid = uuid4(),
@@ -246,9 +258,9 @@ def get_search_results(db: Session, annot_uuid: UUID = None, file_uuid: UUID = N
             annotations a ON a.annot_uuid = r.annot_uuid
         WHERE
             t.file_uuid = {file_uuid}
-        OR
+        %s
             r.annot_uuid = {annot_uuid}
-    """).fetchall()
+    """ % ('AND' if annot_uuid is not None and file_uuid is not None else 'OR')).fetchall()
 
     return results
 

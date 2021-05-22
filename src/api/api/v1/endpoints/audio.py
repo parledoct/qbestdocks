@@ -7,12 +7,21 @@ from typing import List, Optional
 from schemas.audio import FileStatus, FileStatusesOut
 
 from sqlalchemy.orm import Session
+from common.resources.database.conn import get_db
 from common.resources.database import conn, crud, models
 
 from helpers import wav_to_s3files, generate_file_md5
 from pydub import AudioSegment
 
 router = APIRouter()
+
+@router.get("/list", summary="List audio files", response_model=List[FileStatus])
+async def get_all_audio(request: Request, db: Session = Depends(get_db)):
+    """
+
+    """
+    files = crud.get_files(db)
+    return [ FileStatus(**file.__dict__) for file in files ]
 
 @router.get("/mp3/", summary="Fetch mp3 audio by identifier", response_class=Response(media_type="audio/mp3"))
 def get_mp3_audio(request: Request, file_uuid: str = None, annot_uuid: str = None, start_sec: Optional[float] = None, end_sec: Optional[float] = None, db: Session = Depends(conn.get_db)):
@@ -23,7 +32,7 @@ def get_mp3_audio(request: Request, file_uuid: str = None, annot_uuid: str = Non
     """
 
     if file_uuid is None and annot_uuid is None:
-        raise HTTPException(status_code=400, detail="Either file_uuid or annot_uuid must be supplied.")    
+        raise HTTPException(status_code=400, detail="Either file_uuid or annot_uuid must be supplied.")
 
     if annot_uuid is not None:
 
@@ -49,7 +58,7 @@ def get_mp3_audio(request: Request, file_uuid: str = None, annot_uuid: str = Non
     start_ms  = start_sec * 1000 if start_sec is not None else 0
     end_ms    = end_sec * 1000 if end_sec is not None else utterance.duration_seconds * 1000
     utterance = utterance[start_ms:end_ms]
-    
+
     buffer = io.BytesIO()
     utterance.export(buffer, format="mp3")
 
@@ -63,7 +72,7 @@ async def upload_wav_files(request: Request, files: List[UploadFile] = File(...)
     md5 hash already exists on the configured S3 bucket, it will be skipped. Similary, for
     any other validations errors (e.g. not a wav file), the file will be added to the skip
     list with an appropriate message.
-    
+
     Otherwise, the processing component will convert the .wav files to 16 kHz mono and then
     upload the downsampled .wav and .mp3 versions of the audio to the configured S3 bucket,
     and issue UUIDs for each file (IDs returned in the response).
@@ -103,7 +112,7 @@ async def upload_wav_files(request: Request, files: List[UploadFile] = File(...)
                     file_uuid = crud.create_file(db, wav_hash, f.filename),
                     upload_filename = f.filename
                 )
-                
+
                 # Generate downsampled and compressed audio files and upload to S3 buckets
                 wav16k_path, mp3_path = wav_to_s3files(tmp_path, new_file.file_uuid)
                 request.app.state.s3client.fput_object("audio-wav", os.path.basename(wav16k_path), wav16k_path)

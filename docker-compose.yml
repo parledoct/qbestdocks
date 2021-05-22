@@ -85,6 +85,8 @@ services:
         # Uncomment for front end dev work
         # volumes:
         #     - ${PWD}/src/client:/app
-
+        #     - /app/build
+        #     - /app/public
+        #     - /app/node_modules
 networks:
     network: {}

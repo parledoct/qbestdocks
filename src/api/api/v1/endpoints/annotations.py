@@ -11,6 +11,14 @@ import common.resources.database.crud as crud
 
 router = APIRouter()
 
+@router.get("/list", summary="List annotations", response_model=List[AnnotationOut])
+async def get_all_annotations(request: Request, db: Session = Depends(get_db)):
+    """
+
+    """
+    annotations = crud.get_annotations(db)
+    return [ AnnotationOut(**annotation.__dict__) for annotation in annotations ]
+
 @router.get("/", summary="Get annotation(s) associated with identifier", response_model=List[AnnotationOut], status_code=201)
 async def get_annotations(request: Request, file_uuid: str = None, annot_uuid: str = None, db: Session = Depends(get_db)):
     """
@@ -24,7 +32,7 @@ async def get_annotations(request: Request, file_uuid: str = None, annot_uuid: s
     if file_uuid is not None:
 
         if not crud.file_exists(db, file_uuid):
-            raise HTTPException(status_code=404, detail=f"File by identifier '{file_uuid}' not found in files table.")    
+            raise HTTPException(status_code=404, detail=f"File by identifier '{file_uuid}' not found in files table.")
 
         annotations = crud.get_file_annotations(db, file_uuid=file_uuid)
 
@@ -51,7 +59,7 @@ async def update_annotations(request: Request, annotations: List[AnnotationIn], 
         if a.action == "insert":
 
             if not crud.file_exists(db, a.file_uuid):
-                raise HTTPException(status_code=404, detail=f"File by identifier '{a.file_uuid}' not found in files table.")    
+                raise HTTPException(status_code=404, detail=f"File by identifier '{a.file_uuid}' not found in files table.")
 
             new_annotation = crud.create_annotation(db, a.file_uuid, a.start_sec, a.end_sec, a.annotation)
             a.annot_uuid   =  new_annotation.annot_uuid
@@ -66,7 +74,7 @@ async def update_annotations(request: Request, annotations: List[AnnotationIn], 
         elif a.action == "delete":
 
             if not crud.annotation_exists(db, a.annot_uuid):
-                raise HTTPException(status_code=404, detail=f"Annotation by identifier '{a.annot_uuid}' not found in annotations table.")    
+                raise HTTPException(status_code=404, detail=f"Annotation by identifier '{a.annot_uuid}' not found in annotations table.")
 
             crud.delete_annotation(db, a.annot_uuid)
             a.start_sec = -1

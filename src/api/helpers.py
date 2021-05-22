@@ -4,8 +4,8 @@ from os import path
 from uuid import UUID
 
 def wav_to_s3files(upload_path: str, file_id: UUID, output_path = "/tmp"):
-    s = AudioSegment.from_wav(upload_path).set_channels(1).set_frame_rate(16000)
-    
+    s = AudioSegment.from_file(upload_path).set_channels(1).set_frame_rate(16000)
+
     wav_path, mp3_path = [ path.join(output_path, str(file_id) + ext) for ext in [".wav", ".mp3"] ]
 
     s.export(wav_path, format="wav")
@@ -23,4 +23,3 @@ def generate_file_md5(filepath: str, blocksize: int=2**20):
                 break
             m.update(buf)
     return m.hexdigest()
-

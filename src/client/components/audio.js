@@ -94,10 +94,10 @@ function Audio(props) {
           ]
         });
         //setWavesurfer(ws);
-        let reader = new FileReader()
-        reader.onload = (x) => ws.load(x.target.result)
-        reader.readAsDataURL(props.file)
-        //ws.load('/test.mp3');
+        // let reader = new FileReader()
+        // reader.onload = (x) => ws.load(x.target.result)
+        // reader.readAsDataURL(props.file)
+        ws.load(props.file);
 
         ws.enableDragSelection({
             minLength: 1,
