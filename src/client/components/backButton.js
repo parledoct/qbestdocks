@@ -7,7 +7,7 @@ import React, { useRef, useEffect, Component, useState } from "react";
 const BackButton = () => {
     const router = useRouter()
     return (
-        <Button color='blue' onClick={() => router.back()}>
+        <Button color='blue' onClick={() => router.back()} style={{top: 10}}>
             <Icon name='left arrow' />
             Back
         </Button>

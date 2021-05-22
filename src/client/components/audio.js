@@ -30,6 +30,19 @@ let updateRegions = (wavesurfer, json) => {
     //});
 };
 
+/*
+<Audio> component
+
+Displays waveform for a single audio file along
+with various tools (minimap, zoom, annotations).
+
+Props include:
+    - file (str)
+    - detailed (bool, optional)
+    - annotatedRegions (Array, optional)
+    - updateAnnotatedRegions (function, optional)
+    - updateRegionLabel (function, optional)
+*/
 function Audio(props) {
     const waveformRef = useRef();
     const timelineRef = useRef();
@@ -37,13 +50,12 @@ function Audio(props) {
     const sliderRef = useRef();
     const minimapRef = useRef();
     const [ zoom, setZoom ] = useState(50);
-    const zoomStep = props.zoomStep || 20;
+    const zoomStep = props.zoomStep || 20; // FIXME make it adaptive to file duration
+    const detailedAudio = props.detailed !== undefined ? props.detailed : false;
 
     const waveform = useRef(undefined);
     let wavesurfer = waveform.current;
 
-    //const [ annotatedRegions, setAnnotatedRegions ] = useState(defaultAnnotatedRegions);
-    console.log('Audio', props.annotatedRegions)
     useEffect(() => {
     async function factory () {
       const WaveSurfer = (await import('wavesurfer.js')).default
@@ -53,6 +65,47 @@ function Audio(props) {
       const CursorPlugin = (await import('wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js')).default
       const MinimapPlugin = (await import('wavesurfer.js/dist/plugin/wavesurfer.minimap.min.js')).default
 
+      let wsPlugins = [
+          RegionPlugin.create({}),
+          MarkersPlugin.create({
+              markers: [
+                  // {
+                  //     time: 5.5,
+                  //     label: "V1",
+                  //     color: '#ff990a'
+                  // }
+              ]
+          }),
+          TimelinePlugin.create({
+              container: timelineRef.current,
+              formatTimeCallback: formatTimeCallback,
+              timeInterval: timeInterval,
+              primaryLabelInterval: primaryLabelInterval,
+              secondaryLabelInterval: secondaryLabelInterval,
+                primaryColor: 'blue',
+                secondaryColor: 'red',
+                primaryFontColor: 'blue',
+                secondaryFontColor: 'red'
+          }),
+          CursorPlugin.create({
+              showTime: true,
+              opacity: 1
+          }),
+      ]
+      if (detailedAudio) {
+          wsPlugins.push(
+              MinimapPlugin.create({
+                  container: detailedAudio ? minimapRef.current : undefined,
+                  showOverview: true,
+                  //overviewOpacity: 0.5,
+                  overviewBorderSize: 0.5,
+                  overviewBorderColor: 'blue',
+                  waveColor: '#777',
+                  progressColor: '#222',
+                  height: 50
+              })
+          )
+      }
       if(waveformRef.current) {
         console.log(waveform.current, waveform.current instanceof WaveSurfer)
         if (waveform.current instanceof WaveSurfer) {
@@ -71,45 +124,7 @@ function Audio(props) {
           mediaControls: true,
           backend: 'MediaElement',
           fillParent: true,
-          plugins: [
-              RegionPlugin.create({}),
-              MarkersPlugin.create({
-                  markers: [
-                      // {
-                      //     time: 5.5,
-                      //     label: "V1",
-                      //     color: '#ff990a'
-                      // }
-                  ]
-              }),
-              TimelinePlugin.create({
-                  container: timelineRef.current,
-                  formatTimeCallback: formatTimeCallback,
-                  timeInterval: timeInterval,
-                  primaryLabelInterval: primaryLabelInterval,
-                  secondaryLabelInterval: secondaryLabelInterval,
-              	    primaryColor: 'blue',
-              	    secondaryColor: 'red',
-              	    primaryFontColor: 'blue',
-              	    secondaryFontColor: 'red'
-              }),
-              CursorPlugin.create({
-                  showTime: true,
-                  opacity: 1
-              }),
-              MinimapPlugin.create({
-                  container: minimapRef.current,
-                  showOverview: true,
-                  //overviewOpacity: 0.5,
-                  overviewBorderSize: 0.5,
-                  overviewBorderColor: 'blue',
-                  waveColor: '#777',
-                  progressColor: '#222',
-                  height: 50
-              })
-              //ElanPlugin.create({}),
-              //ElanWaveSegmentPlugin.create({})
-          ]
+          plugins: wsPlugins
         });
         //setWavesurfer(ws);
         // let reader = new FileReader()
@@ -228,11 +243,12 @@ function Audio(props) {
         <div style={{marginTop: 10}}>
         <div ref={timelineRef} style={{width: '100%'}}/>
         <div ref={waveformRef} style={{width: '100%', paddingTop: "1em", position: 'relative'}}>
-
+            {detailedAudio ?
             <div style={{display: 'flex', alignItems: 'baseline', flexDirection: 'row', zIndex: 10, position: 'absolute', right: 0, top: 0}} >
                 <Icon name='zoom-in' onClick={() => setZoom(prevZoom => prevZoom + zoomStep)} />
                 <Icon name='zoom-out' onClick={() => setZoom(prevZoom => Math.max(prevZoom - zoomStep, 0))} />
             </div>
+            : '' }
         </div>
         <div ref={minimapRef} id='minimap' style={{width: '100%'}} />
 

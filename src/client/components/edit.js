@@ -41,6 +41,7 @@ function Edit(props) {
 
             {(files !== undefined) && (files.length > 0) && (fileIndex > -1) && (
                         <Audio
+                            detailed
                             file={'/v1/audio/mp3?file_uuid=' + files[fileIndex].file_uuid}
                             annotatedRegions={regions[fileIndex]}
                             updateAnnotatedRegions={(x) => {
@@ -52,12 +53,12 @@ function Edit(props) {
                                                 start: x.start,
                                                 end: x.end,
                                                 label: "New query",
-                                                file_id: 'blabla'
+                                                file_id: fileIndex
                                             }]), ...prevRegions.slice(fileIndex+1)])
                                 }
                                 else {
                                     if (x.attributes.delete) {
-                                        setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, x.id), ...prevRegions[fileIndex].slice(x.id+1)], ...prevRegions.slice(fileIndex+1)]);                                        
+                                        setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, x.id), ...prevRegions[fileIndex].slice(x.id+1)], ...prevRegions.slice(fileIndex+1)]);
                                     }
                                     else {
                                         setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, x.id), { ...prevRegions[fileIndex][x.id], start: x.start, end: x.end }, ...prevRegions[fileIndex].slice(x.id+1)], ...prevRegions.slice(fileIndex+1)]);
@@ -75,32 +76,39 @@ function Edit(props) {
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>
-                            File ID
+                            File
                         </Table.HeaderCell>
                         <Table.HeaderCell>
                             Text label
                         </Table.HeaderCell>
                         <Table.HeaderCell>
-                            Audio
+                            Audio bounds (sec)
                         </Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                {regions[fileIndex] !== undefined && regions[fileIndex].map((query, queryIdx) => (
-                    <Table.Row key={queryIdx}>
-                        <Table.Cell>{query.file_id}</Table.Cell>
-                        <Table.Cell>{query.label}</Table.Cell>
-                        <Table.Cell>{query.start}-{query.end}</Table.Cell>
-                    </Table.Row>
+                {regions.filter((region) => (region !== undefined && region.length > 0)).map((region, fileIdx) => (
+                    <React.Fragment key={fileIdx}>
+                    {region !== undefined && region.map((query, queryIdx) => (
+                        <Table.Row key={queryIdx}>
+                            <Table.Cell>{props.files[query.file_id].upload_filename}</Table.Cell>
+                            <Table.Cell>{query.label}</Table.Cell>
+                            <Table.Cell>{query.start.toFixed(4)}-{query.end.toFixed(4)}</Table.Cell>
+                        </Table.Row>
+                    ))}
+                    </React.Fragment>
                 ))}
+
                 </Table.Body>
 
             </Table>
 
             <div style={{clear: 'both'}}/>
-            <p>Once you have checked the query labels and associations, you can submit your search job.</p>
+            <p>Once you have checked the query labels and associations, you can save them.</p>
 
-            <Button size='huge' primary onClick={ () => axios.post(API_URL + '/v1/annotations/update', [].concat.apply([], regions.map((fileRegions, regionIdx) => fileRegions.map((region) => {
+            <Button
+                size='huge' color='green' icon='save outline' content='Save annotations' style={{margin: 'auto', display: 'block'}}
+                onClick={ () => axios.post(API_URL + '/v1/annotations/update', [].concat.apply([], regions.map((fileRegions, regionIdx) => fileRegions.map((region) => {
                 return {
                     file_uuid: props.files[regionIdx].file_uuid,
                     action: 'insert',
@@ -108,9 +116,7 @@ function Edit(props) {
                     start_sec: region.start,
                     end_sec: region.end,
                 };
-            })))).then((response) => console.log("Success", response), (err) => console.log("Error", err))  }>
-                Submit
-            </Button>
+            })))).then((response) => router.back(), (err) => console.log("Error", err))  } />
         </div>
     );
 }

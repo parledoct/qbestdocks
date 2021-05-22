@@ -3,6 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, Transition, Step, Table } from 'semantic-ui-react'
 import Edit from '../../components/edit.js'
+import BackButton from '../../components/backButton.js'
 
 //let file_uuids = ["59f01612-6ff2-4593-8b4a-89881ea81aea", "ec18f3b2-d657-401b-a149-02f59fb627d2"]
 
@@ -17,16 +18,13 @@ const NewAnnotation = ({ files }) => {
 
             <Grid.Column>
                 <Container text>
+                    <BackButton />
                     <Header as='h1'>
                         Create new annotations
                     </Header>
 
                     <Edit files={files}/>
 
-                    <Button color='blue' onClick={() => router.back()}>
-                        <Icon name='left arrow' />
-                        Back
-                    </Button>
                 </Container>
             </Grid.Column>
         </Grid>
