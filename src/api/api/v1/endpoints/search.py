@@ -21,7 +21,7 @@ async def get_all_jobs(request: Request, db: Session = Depends(get_db)):
     jobs = crud.get_search_jobs(db)
     return [ SearchJob(search_uuid=job.search_uuid, status=AsyncResult(str(job.search_uuid)).state) for job in jobs ]
 
-@router.get("/get/{search_uuid}", summary="List search jobs", response_model=SearchParameters)
+@router.get("/get/{search_uuid}", summary="Get search job", response_model=SearchParameters)
 async def get_job(request: Request, search_uuid: UUID, db: Session = Depends(get_db)):
     """
 

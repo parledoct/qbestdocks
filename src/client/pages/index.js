@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import Link from 'next/link'
-import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button } from 'semantic-ui-react'
+import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, Loader, Dimmer } from 'semantic-ui-react'
 import React, { useRef, useEffect, Component, useState } from "react";
 
 //import styles from '../styles/Home.module.css'
@@ -17,6 +17,9 @@ export default function Home()  {
               <title>QBE-STD</title>
               <link rel="icon" href="/favicon.ico" />
             </Head>
+            <Dimmer active>
+                <Loader size='massive'>Loading Qbe-Std...</Loader>
+            </Dimmer>
         </Grid>
     );
 }

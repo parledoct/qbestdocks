@@ -41,7 +41,7 @@ async def get_annotations(request: Request, file_uuid: str = None, annot_uuid: s
         if not crud.annotation_exists(db, annot_uuid):
                 raise HTTPException(status_code=404, detail=f"Annotation by identifier '{annot_uuid}' not found in annotations table.")
 
-        annotations = crud.get_annotations(db, annot_uuid=annot_uuid)
+        annotations = [crud.get_annotation(db, annot_uuid=annot_uuid)]
 
     return [ AnnotationOut(**annotation.__dict__) for annotation in annotations ]
 

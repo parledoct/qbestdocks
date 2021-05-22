@@ -5,6 +5,7 @@ from fastapi.responses import Response, StreamingResponse
 
 from typing import List, Optional
 from schemas.audio import FileStatus, FileStatusesOut
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 from common.resources.database.conn import get_db
@@ -22,6 +23,14 @@ async def get_all_audio(request: Request, db: Session = Depends(get_db)):
     """
     files = crud.get_files(db)
     return [ FileStatus(**file.__dict__) for file in files ]
+
+@router.get("/get/{file_uuid}", summary="Get audio file metadata", response_model=FileStatus)
+async def get_all_audio(request: Request, file_uuid: UUID, db: Session = Depends(get_db)):
+    """
+
+    """
+    file = crud.get_file(db, file_uuid)
+    return FileStatus(**file.__dict__)
 
 @router.get("/mp3/", summary="Fetch mp3 audio by identifier", response_class=Response(media_type="audio/mp3"))
 def get_mp3_audio(request: Request, file_uuid: str = None, annot_uuid: str = None, start_sec: Optional[float] = None, end_sec: Optional[float] = None, db: Session = Depends(conn.get_db)):

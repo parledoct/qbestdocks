@@ -54,6 +54,9 @@ def create_views(db: Session):
 def get_files(db: Session):
     return db.query(File).all()
 
+def get_file(db: Session, file_uuid: UUID):
+    return db.query(File).filter_by(file_uuid=file_uuid).first()
+
 def file_exists(db: Session, file_uuid: UUID):
     return db.query(File.file_uuid).filter_by(file_uuid=file_uuid).first() is not None
 
