@@ -8,7 +8,7 @@ let uuids = ["44c82457-2388-48ec-890d-e6f71fa0a2f4"];
 
 function Searches ({ searches }) {
     console.log(searches)
-
+    console.log(process.env.API_URL)
     return (
         <Layout active={'searches'}>
             <Link href='/searches/new'>

@@ -75,13 +75,17 @@ services:
         build: ./src/client
         container_name: client
         environment:
-            - NODE_ENV=development
+            #- NODE_ENV=development
+            - API_URL=http://api:5000
         links:
             - api:api
         ports:
             - "3000:3000"
         networks:
             - network
+        depends_on:
+            - api
+        # network_mode: host
         # Uncomment for front end dev work
         # volumes:
         #     - ${PWD}/src/client:/app

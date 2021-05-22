@@ -5,12 +5,13 @@ import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, T
 import React, { useRef, useEffect, Component, useState } from "react";
 import Audio from '../../components/audio.js'
 import axios from 'axios'
+import { API_URL } from '../../components/apiUrl.js'
 
 const NewSearch = ({ files, annotations }) => {
     const [selectedFiles, setSelectedFiles] = useState([])
     const [selectedAnnotations, setSelectedAnnotations] = useState([])
     const router = useRouter()
-    
+
     console.log('NewSearch', annotations, selectedFiles)
     let toggleFile = (uuid) => {
         let idx = selectedFiles.indexOf(uuid)
@@ -95,7 +96,7 @@ const NewSearch = ({ files, annotations }) => {
                                 <Card.Description>
                                     <Audio
                                         key={annotation.annot_uuid}
-                                        file={process.env.API_URL + '/v1/audio/mp3?file_uuid=' + annotation.file_uuid + '&start_sec=' + annotation.start_sec + '&end_sec=' + annotation.end_sec + '&annot_uuid=' + annotation.annot_uuid}
+                                        file={'/v1/audio/mp3?file_uuid=' + annotation.file_uuid + '&start_sec=' + annotation.start_sec + '&end_sec=' + annotation.end_sec + '&annot_uuid=' + annotation.annot_uuid}
                                     />
                                 </Card.Description>
                             </Card.Content>
@@ -108,7 +109,7 @@ const NewSearch = ({ files, annotations }) => {
                             Back
                         </Button>
                     </Link>
-                    <Button color='green' floated='right' onClick={() => axios.post(process.env.API_URL + '/v1/search/', {
+                    <Button color='green' floated='right' onClick={() => axios.post(API_URL + '/v1/search/', {
                         file_uuids: selectedFiles,
                         annot_uuids: selectedAnnotations
                     }).then((response) => {

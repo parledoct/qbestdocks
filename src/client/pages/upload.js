@@ -4,6 +4,7 @@ import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, T
 import React, { useRef, useEffect, Component, useState } from "react";
 import Edit from '../components/edit.js'
 import { useRouter } from 'next/router'
+import { API_URL } from '../components/apiUrl.js'
 
 import Uppy from '@uppy/core'
 import GoogleDrive from '@uppy/google-drive'
@@ -28,7 +29,7 @@ function Upload() {
             metaFields: [],
             fieldName: 'files',
             //endpoint: 'https://29e819c1-68b3-4c5e-9b52-39f08345f759.mock.pstmn.io/upload'
-            endpoint: process.env.API_URL + '/v1/audio/upload',
+            endpoint: API_URL + '/v1/audio/upload',
             headers: {
                 "Access-Control-Allow-Origin": "*"
             }

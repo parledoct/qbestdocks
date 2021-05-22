@@ -19,7 +19,7 @@ const Annotation = ({ file }) => {
                 {annotation.annotation}
             </Header>
             <Audio
-                file={`${process.env.API_URL}/v1/audio/mp3?annot_uuid=${router.query.uuid}`}
+                file={`/v1/audio/mp3?annot_uuid=${router.query.uuid}`}
             />
             </Segment>
             <BackButton />

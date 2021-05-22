@@ -5,6 +5,7 @@ import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, T
 import React, { useRef, useEffect, Component, useState } from "react";
 import Audio from './audio.js'
 import axios from 'axios'
+import { API_URL } from './apiUrl.js'
 
 function Edit(props) {
     console.log('Edit', props.files)
@@ -40,7 +41,7 @@ function Edit(props) {
 
             {(files !== undefined) && (files.length > 0) && (fileIndex > -1) && (
                         <Audio
-                            file={process.env.API_URL + '/v1/audio/mp3?file_uuid=' + files[fileIndex].file_uuid}
+                            file={'/v1/audio/mp3?file_uuid=' + files[fileIndex].file_uuid}
                             annotatedRegions={regions[fileIndex]}
                             updateAnnotatedRegions={(x) => {
                                 console.log('updateAnnotatedRegions', x, fileIndex, regions)
@@ -94,7 +95,7 @@ function Edit(props) {
             <div style={{clear: 'both'}}/>
             <p>Once you have checked the query labels and associations, you can submit your search job.</p>
 
-            <Button size='huge' primary onClick={ () => axios.post(process.env.API_URL + '/v1/annotations/update', [].concat.apply([], regions.map((fileRegions, regionIdx) => fileRegions.map((region) => {
+            <Button size='huge' primary onClick={ () => axios.post(API_URL + '/v1/annotations/update', [].concat.apply([], regions.map((fileRegions, regionIdx) => fileRegions.map((region) => {
                 return {
                     file_uuid: props.files[regionIdx].file_uuid,
                     action: 'insert',

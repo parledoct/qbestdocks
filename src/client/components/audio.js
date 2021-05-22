@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, Table, Input } from 'semantic-ui-react'
 import React, { useRef, useEffect, Component, useState } from "react";
+import { API_URL } from './apiUrl.js'
 
 const defaultAnnotatedRegions = {
     regions: [{
@@ -97,7 +98,7 @@ function Audio(props) {
         // let reader = new FileReader()
         // reader.onload = (x) => ws.load(x.target.result)
         // reader.readAsDataURL(props.file)
-        ws.load(props.file);
+        ws.load(`${API_URL}${props.file}`);
 
         ws.enableDragSelection({
             minLength: 1,

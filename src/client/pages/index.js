@@ -6,6 +6,13 @@ import React, { useRef, useEffect, Component, useState } from "react";
 //import styles from '../styles/Home.module.css'
 import { useRouter } from 'next/router'
 
+// import getConfig from 'next/config';
+//
+// const { serverRuntimeConfig, publicRuntimeConfig } = getConfig();
+//
+// process.env["API_URL"] = serverRuntimeConfig.API_URL || publicRuntimeConfig.API_URL;
+// console.log("API_URL = ", process.env.API_URL)
+
 export default function Home()  {
     const router = useRouter()
 

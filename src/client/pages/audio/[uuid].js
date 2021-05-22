@@ -15,7 +15,7 @@ const AudioFile = () => {
     const { file, isLoading } = useFile(uuid)
     const { annotations, isLoading: isLoading2 } = useFileAnnotations(uuid)
     console.log(uuid, file, annotations)
-
+    console.log(`/v1/audio/mp3?file_uuid=${router.query.uuid}`)
     return (
         <Layout active={'audioFiles'}>
             <Segment>
@@ -23,13 +23,13 @@ const AudioFile = () => {
                 {!isLoading && file.upload_filename}
             </Header>
             <Audio
-                file={`${process.env.API_URL}/v1/audio/mp3?file_uuid=${router.query.uuid}`}
+                file={`/v1/audio/mp3?file_uuid=${uuid}`}
             />
             </Segment>
             <Header as='h3'>
                 Annotations associated to this file
             </Header>
-            <AnnotationsList annotations={annotations} />
+            {!isLoading2 && <AnnotationsList annotations={annotations} />}
             <BackButton />
         </Layout>
     );
