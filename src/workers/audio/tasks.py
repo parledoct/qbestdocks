@@ -188,6 +188,6 @@ def run_qbestd_search(search_uuid: str, window_step = 4):
         match_start = min_index / test_length
         match_end   = (match_start + match_len) / test_length
 
-        crud.create_search_result(db, annot_uuid, test_uuid, sim_score, match_start, match_end)
+        crud.create_search_result(db, UUID(search_uuid), annot_uuid, test_uuid, sim_score, match_start, match_end)
 
         logger.info(f"Search task: {round((p + 1)/n_pairs*100, 2)}% complete")

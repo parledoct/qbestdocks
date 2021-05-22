@@ -43,6 +43,7 @@ class SearchResult(Base):
 
     result_uuid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
     result_flag = Column(Integer)
+    search_uuid = Column(UUID(as_uuid=True), ForeignKey('search_jobs.search_uuid'), nullable=False)
     annot_uuid  = Column(UUID(as_uuid=True), ForeignKey('annotations.annot_uuid'), nullable=False)
     test_uuid   = Column(UUID(as_uuid=True), ForeignKey('test_regions.test_uuid'), nullable=False)
     score       = Column(Float)

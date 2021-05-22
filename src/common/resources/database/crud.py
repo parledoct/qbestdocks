@@ -182,10 +182,11 @@ def create_search_job(db: Session, annot_uuids: List[UUID], file_uuids: List[UUI
 
     return new_job.search_uuid
 
-def create_search_result(db: Session, annot_uuid: UUID, test_uuid: UUID, sim_score: float, match_start: float, match_end: float):
+def create_search_result(db: Session, search_uuid: UUID, annot_uuid: UUID, test_uuid: UUID, sim_score: float, match_start: float, match_end: float):
     new_result = SearchResult(
         result_uuid = uuid4(),
         result_flag = None,
+        search_uuid = search_uuid,
         annot_uuid  = annot_uuid,
         test_uuid   = test_uuid,
         # Use item() to convert NumPy float64
@@ -238,12 +239,21 @@ def get_unsearched_pairs(db: Session, search_uuid: str):
 
     return results
 
-def get_search_results(db: Session, annot_uuid: UUID = None, file_uuid: UUID = None):
+def get_search_results(db: Session, annot_uuids: List[UUID] = None, file_uuids: List[UUID] = None, search_uuid: UUID = None):
 
-    annot_uuid = 'NULL' if annot_uuid is None else f"'{annot_uuid}'"
-    file_uuid  = 'NULL' if file_uuid is None else f"'{file_uuid}'"
+    if search_uuid is not None:
 
-    results = db.execute(f"""\
+        query_cond  = f"r.search_uuid = '{search_uuid}'"
+
+    else: 
+
+        query_conj  = 'AND' if annot_uuids is not None and file_uuids is not None else 'OR'
+        annot_uuids = 'NULL' if annot_uuids is None else ",".join([f"'{a}'" for a in annot_uuids])  # NULL or 'a_1','a_2'
+        file_uuids  = 'NULL' if file_uuids is None else  ",".join([f"'{f}'" for f in file_uuids])   # NULL or 'f_1,'f_2'
+
+        query_cond  = f"t.file_uuid IN ({file_uuids}) {query_conj} r.annot_uuid IN ({annot_uuids})"        
+
+    query_str   = f"""\
         SELECT r.result_uuid,
             r.annot_uuid,
             a.annotation,
@@ -260,10 +270,13 @@ def get_search_results(db: Session, annot_uuid: UUID = None, file_uuid: UUID = N
         LEFT JOIN
             annotations a ON a.annot_uuid = r.annot_uuid
         WHERE
-            t.file_uuid = {file_uuid}
-        %s
-            r.annot_uuid = {annot_uuid}
-    """ % ('AND' if annot_uuid is not None and file_uuid is not None else 'OR')).fetchall()
+            {query_cond}
+        ORDER BY match_score DESC
+    """
+
+    print(query_str)
+
+    results = db.execute(query_str).fetchall()
 
     return results
 
