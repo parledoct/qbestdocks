@@ -85,5 +85,9 @@ showtitle div {
     font-size: 10px;
     visibility: visible !important;
     font-family: sans-serif;
-    background-color: #444;
+}
+
+div#minimap overview {
+    background-color: 'rgb(95 158 160)';
+    opacity: 0.5;
 }

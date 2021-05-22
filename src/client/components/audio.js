@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, Table, Input } from 'semantic-ui-react'
 import React, { useRef, useEffect, Component, useState } from "react";
 import { API_URL } from './apiUrl.js'
+import { formatTimeCallback, timeInterval, primaryLabelInterval, secondaryLabelInterval } from './formatTimeline.js'
 
 let updateRegions = (wavesurfer, json) => {
     //Promise.resolve(wavesurfer).then((wavesurfer) => {
@@ -34,6 +35,9 @@ function Audio(props) {
     const timelineRef = useRef();
     const closeRef = useRef();
     const sliderRef = useRef();
+    const minimapRef = useRef();
+    const [ zoom, setZoom ] = useState(50);
+    const zoomStep = props.zoomStep || 20;
 
     const waveform = useRef(undefined);
     let wavesurfer = waveform.current;
@@ -47,6 +51,7 @@ function Audio(props) {
       const MarkersPlugin = (await import('wavesurfer.js/dist/plugin/wavesurfer.markers.min.js')).default
       const TimelinePlugin = (await import('wavesurfer.js/dist/plugin/wavesurfer.timeline.min.js')).default
       const CursorPlugin = (await import('wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js')).default
+      const MinimapPlugin = (await import('wavesurfer.js/dist/plugin/wavesurfer.minimap.min.js')).default
 
       if(waveformRef.current) {
         console.log(waveform.current, waveform.current instanceof WaveSurfer)
@@ -60,6 +65,7 @@ function Audio(props) {
           barHeight: 1,
           barRadius: 2,
           barGap: null,
+          normalize: true, // normalize by maximum peak
           waveColor: 'violet',
           progressColor: 'purple',
           mediaControls: true,
@@ -77,11 +83,29 @@ function Audio(props) {
                   ]
               }),
               TimelinePlugin.create({
-                  container: timelineRef.current
+                  container: timelineRef.current,
+                  formatTimeCallback: formatTimeCallback,
+                  timeInterval: timeInterval,
+                  primaryLabelInterval: primaryLabelInterval,
+                  secondaryLabelInterval: secondaryLabelInterval,
+              	    primaryColor: 'blue',
+              	    secondaryColor: 'red',
+              	    primaryFontColor: 'blue',
+              	    secondaryFontColor: 'red'
               }),
               CursorPlugin.create({
                   showTime: true,
                   opacity: 1
+              }),
+              MinimapPlugin.create({
+                  container: minimapRef.current,
+                  showOverview: true,
+                  //overviewOpacity: 0.5,
+                  overviewBorderSize: 0.5,
+                  overviewBorderColor: 'blue',
+                  waveColor: '#777',
+                  progressColor: '#222',
+                  height: 50
               })
               //ElanPlugin.create({}),
               //ElanWaveSegmentPlugin.create({})
@@ -165,11 +189,26 @@ function Audio(props) {
         //     uppy.close();
         // }
         waveform.current = ws;
+
+        ws.on('ready', () => {
+            setZoom(Math.trunc(ws.drawer.getWidth() /ws.getDuration() / ws.params.pixelRatio));
+            console.log(ws.drawer.getWidth(), ws.getDuration(), ws.params, Math.trunc(ws.drawer.getWidth() /ws.getDuration() / ws.params.pixelRatio))
+
+        })
+        //var slider = document.getElementById("myRange");
+        // console.log(sliderRef)
+        // sliderRef.current.onchange = (event) => {
+        //     ws.getDuration()
+        //     setZoom(event.target.value);
+        //     console.log('zoom', event.target.value, ws.zoom, ws.params.minPxPerSec)
+        //     ws.zoom(Number(event.target.value));
+        // }
+        // <input ref={sliderRef} type="range" min="1" max="100" defaultValue={zoom} className="slider" id="slider" />
         return () => ws.destroy();
       }
   };
   factory();
-}, [props.file === undefined ? props.file : props.file.name]);
+}, [props.file]);
 
     useEffect(() => {
         if (waveform.current !== undefined) {
@@ -178,9 +217,25 @@ function Audio(props) {
         }
     }, [props.annotatedRegions]);
 
+    useEffect(() => {
+        if (waveform.current !== undefined) {
+            console.log('zooming max', waveform.current.getDuration() * waveform.current.params.minPxPerSec * waveform.current.params.pixelRatio)
+            waveform.current.zoom(Math.max(0, zoom))
+        }
+    }, [zoom])
+
     return (
+        <div style={{marginTop: 10}}>
+        <div ref={timelineRef} style={{width: '100%'}}/>
         <div ref={waveformRef} style={{width: '100%', paddingTop: "1em", position: 'relative'}}>
-            <div ref={timelineRef} style={{width: '100%'}}/>
+
+            <div style={{display: 'flex', alignItems: 'baseline', flexDirection: 'row', zIndex: 10, position: 'absolute', right: 0, top: 0}} >
+                <Icon name='zoom-in' onClick={() => setZoom(prevZoom => prevZoom + zoomStep)} />
+                <Icon name='zoom-out' onClick={() => setZoom(prevZoom => Math.max(prevZoom - zoomStep, 0))} />
+            </div>
+        </div>
+        <div ref={minimapRef} id='minimap' style={{width: '100%'}} />
+
         </div>
     );
 }
