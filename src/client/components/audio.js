@@ -5,14 +5,6 @@ import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, T
 import React, { useRef, useEffect, Component, useState } from "react";
 import { API_URL } from './apiUrl.js'
 
-const defaultAnnotatedRegions = {
-    regions: [{
-        start: 10,
-        end: 20,
-        label: "Example"
-    }]
-};
-
 let updateRegions = (wavesurfer, json) => {
     //Promise.resolve(wavesurfer).then((wavesurfer) => {
         if (wavesurfer !== undefined && json !== undefined) {
@@ -28,7 +20,8 @@ let updateRegions = (wavesurfer, json) => {
                     color: "rgba(255, 215, 0, 0.2)",
                     attributes: {
                         label: region.label,
-                        new: false
+                        new: false,
+                        delete: false
                     }
                 });
             });
@@ -101,17 +94,18 @@ function Audio(props) {
         ws.load(`${API_URL}${props.file}`);
 
         ws.enableDragSelection({
-            minLength: 1,
+            minLength: 0.01,
             loop: false,
             drag: false,
             resize: true,
             attributes: {new: true}
         })
         ws.on('region-created', (e) => {
+            console.log('e', e)
             var el = document.createElement('span');
             el.innerHTML += 'x';
             el.className = "closeButton";
-            el.onclick = (event) => {event.stopPropagation(); e.remove(); };
+            el.onclick = (event) => {event.stopPropagation(); e.remove(); e.attributes.delete = true; props.updateAnnotatedRegions(e);};
 
             var edit_label = document.createElement('input');
             //edit_label.style = {visibility: "hidden"};

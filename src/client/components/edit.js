@@ -56,7 +56,12 @@ function Edit(props) {
                                             }]), ...prevRegions.slice(fileIndex+1)])
                                 }
                                 else {
-                                    setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, x.id), { ...prevRegions[fileIndex][x.id], start: x.start, end: x.end }, ...prevRegions[fileIndex].slice(x.id+1)], ...prevRegions.slice(fileIndex+1)]);
+                                    if (x.attributes.delete) {
+                                        setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, x.id), ...prevRegions[fileIndex].slice(x.id+1)], ...prevRegions.slice(fileIndex+1)]);                                        
+                                    }
+                                    else {
+                                        setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, x.id), { ...prevRegions[fileIndex][x.id], start: x.start, end: x.end }, ...prevRegions[fileIndex].slice(x.id+1)], ...prevRegions.slice(fileIndex+1)]);
+                                    }
                                 }
                             }}
                             updateRegionLabel={(id, text) => {

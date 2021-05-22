@@ -4,8 +4,6 @@ import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, T
 import React, { useRef, useEffect, Component, useState } from "react";
 import Layout from '../components/layout.js'
 
-let uuids = ["44c82457-2388-48ec-890d-e6f71fa0a2f4"];
-
 function Searches ({ searches }) {
     console.log(searches)
     console.log(process.env.API_URL)
@@ -57,15 +55,6 @@ export default Searches
 export async function getServerSideProps(context) {
     const res = await fetch(process.env.API_URL + '/v1/search/list')
     const searches = await res.json()
-    // let searches = []
-    // await Promise.all(uuids.map(async (uuid) => {
-    //     const res = await fetch(process.env.API_URL + '/v1/search/status/' + uuid)
-    //     const data = await res.json()
-    //     if (!data) {
-    //         return { notFound: true }
-    //     }
-    //     searches.push(data)
-    // }))
 
     return {
         props: {

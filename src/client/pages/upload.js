@@ -17,13 +17,15 @@ function Upload() {
     const router = useRouter()
     const [step, setStep] = useState(1)
     const [collection, setCollection] = useState("")
-    const [queryFiles, setQueryFiles] = useState([])
     const [searchFiles, setSearchFiles] = useState([])
 
     const searchUploader = useUppy(() => {
         return new Uppy({
             id: 'searchUploader',
-            autoProceed: true,
+            autoProceed: false,
+            restrictions: {
+                allowedFileTypes: ['.wav']
+            }
         }).use(XHRUpload, {
             id: 'XHRUpload',
             metaFields: [],
