@@ -63,12 +63,12 @@ async def get_job_status(request: Request, search_uuid: UUID):
     return SearchJob(search_uuid=search_uuid, status=res.state)
 
 @router.get("/results/", summary = "Get job results", response_model = List[SearchResult], status_code=200)
-async def get_job_status(request: Request, annot_uuid: str = None, file_uuid: str = None, db: Session = Depends(get_db)):
+async def get_search_results(request: Request, annot_uuids: List[UUID] = None, file_uuids: List[UUID] = None, search_uuid: UUID = None, db: Session = Depends(get_db)):
 
     """
-    Returns list of search results associated with `annot_uuid` or `file_uuid`
+    Returns list of search results associated with `annot_uuids`, `file_uuids`, or `search_uuid`.
     """
 
-    matches = crud.get_search_results(db, annot_uuid, file_uuid)
+    matches = crud.get_search_results(db, annot_uuids, file_uuids, search_uuid)
 
     return [ SearchResult(**dict(match)) for match in matches ]
