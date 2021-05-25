@@ -1,6 +1,8 @@
 import useSWR from 'swr'
 import axios from 'axios'
 const fetcher = url => axios.get(url).then(res => res.data)
+const fetcher_with_body = params => url => axios.get(url, { params: params }).then(res => res.data)
+
 import { API_URL } from './apiUrl.js'
 
 export function useAnnotation (uuid) {
@@ -43,7 +45,7 @@ export function useFileAnnotations (uuid) {
 
 export function useFileResults (uuid) {
 
-  const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/search/results/?file_uuid=${uuid}` : null, fetcher)
+  const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/search/results/` : null, fetcher_with_body({ file_uuids: [uuid] }))
   //console.log('api url', API_URL, process.env)
   return {
     results: data,
@@ -54,7 +56,7 @@ export function useFileResults (uuid) {
 
 export function useAnnotationResults (uuid) {
 
-  const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/search/results/?annot_uuid=${uuid}` : null, fetcher)
+  const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/search/results/?annot_uuids[]=${uuid}` : null, fetcher)
   //console.log('api url', API_URL, process.env)
   return {
     results: data,
