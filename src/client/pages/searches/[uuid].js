@@ -2,28 +2,19 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
 import { Container, Header, Icon, Grid, Form, TextArea, List, Segment,
-        Button, Transition, Step, Table, Loader, Pagination, Dropdown, Search } from 'semantic-ui-react'
-import { useSearch, useSearchStatus, useSearchResults, useFileList } from '../../components/swr.js'
+        Button, Transition, Step, Table, Loader, Pagination, Dropdown, Search, Tab } from 'semantic-ui-react'
+import { useSearch, useSearchStatus, useSearchResults, useFileList, useSearchAnnotations } from '../../components/swr.js'
 import React, { useRef, useEffect, Component, useState } from "react";
 import Fuse from 'fuse.js'
-import AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
-import { API_URL } from '../../components/apiUrl.js'
-
-/* Define Fuse.js instance */
-const options = {
-    includeScore: true,
-    minMatchCharLength: 2,
-    findAllMatches: true,
-    threshold: 0.4,
-    keys: ['upload_filename', 'annotation']
-}
-const fuse = new Fuse([], options)
+import { fuse } from '../../components/fuse.js'
+import SimpleAudio from '../../components/simpleAudio.js'
 
 const SearchStatus = () => {
     const router = useRouter()
     const { uuid } = router.query
 
     const { search, isLoading } = useSearch(uuid)
+    //const { searchAnnotations, isLoading5 } = useSearchAnnotations(uuid)
     const { status, isLoading: isLoading2 } = useSearchStatus(uuid)
     const { results: rawResults, isLoading: isLoading3 } = useSearchResults(uuid)
     const { fileList, isLoading: isLoading4 } = useFileList()
@@ -34,8 +25,8 @@ const SearchStatus = () => {
     const [ direction, setDirection ] = useState('descending')
     const [ results, setResults ] = useState(rawResults)
 
-    console.log(direction, column, results)
-
+    //console.log(direction, column, results)
+    //console.log(searchAnnotations)
     // Add file upload name to each result
     let refine = (rarray) => rarray.map(r => {return {...r, upload_filename: fileList.filter((f) => f.file_uuid == r.file_uuid)[0].upload_filename}; })
 
@@ -55,7 +46,7 @@ const SearchStatus = () => {
             setResults(results.sort((a, b) => direction == 'ascending' ? (a[column] > b[column] ? 1 : (a[column] < b[column] ? -1 : 0) ) : (a[column] > b[column] ? -1 : (a[column] < b[column] ? 1 : 0) ) ))
         }
     }, [direction, column])
-
+    console.log(search)
     return (
         <Grid style={{ height: '100vh' }} verticalAlign='middle' centered>
             <Head>
@@ -65,7 +56,7 @@ const SearchStatus = () => {
             <Grid.Column>
                 <Container text>
                     <Header as='h2' dividing>
-                        <Icon name='cogs' circular inverted color='teal'/>
+                        <Icon name='flag checkered' color={(!isLoading2) ? (status.status == 'SUCCESS' ? 'green' : 'orange') : 'grey'}/>
                         <Header.Content>
                             Search #{uuid}
                             <Header.Subheader>
@@ -77,8 +68,32 @@ const SearchStatus = () => {
                         </Header.Content>
                     </Header>
 
+                    <Header as='h3'>Details of the search</Header>
+                    {isLoading ? <Loader / > :
+                    <React.Fragment>
+                    <Tab menu={{ secondary: true, pointing: true }} panes={[
+                        {
+                            menuItem: 'Selected annotations',
+                            render: () => (
+                                <React.Fragment>
+                                    {search.annot_uuids.map((uuid) => <p><Link href={'/annotation/' + uuid}>{uuid}</Link></p>)}
+                                </React.Fragment>
+                            )
+                        },
+                        {
+                            menuItem: 'Selected audio files',
+                            render: () => (
+                                <React.Fragment>
+                                    {search.file_uuids.map((uuid) => <p><Link href={'/audio/' + uuid}>{fileList.filter(f => f.file_uuid == uuid)[0].upload_filename}</Link></p>)}
+                                </React.Fragment>
+                            )
+                        }
+                    ]}/>
+                    </React.Fragment>
+                    }
+                    <Header as='h3'>Results</Header>
 
-                    <p>When they are ready, query results will be displayed here. You can sort by clicking on a column name, or click on queries and files in the table to see more details.</p>
+                    {isLoading3 ? <p>When they are ready, query results will be displayed here.</p> : <p>You can sort by clicking on a column name, or click on queries and files in the table to see details.</p>}
 
                     {(isLoading3 || results === undefined) ? <Loader/> :
                     <React.Fragment>
@@ -104,6 +119,7 @@ const SearchStatus = () => {
                         resultRenderer={null}
                         showNoResults={false}
                         minCharacters={2}
+                        placeholder={'Filter results'}
                     />
                     <Table sortable celled striped>
                         <Table.Header>
@@ -133,32 +149,14 @@ const SearchStatus = () => {
                                 <Table.Row key={result.result_uuid} id={result.result_uuid}>
 
                                     <Table.Cell selectable style={{lineHeight: '1em'}}>
-                                        <AudioPlayer
-                                            src={`${API_URL}/v1/audio/mp3?annot_uuid=${result.annot_uuid}`}
-                                            layout='horizontal'
-                                            customControlsSection={[
-                                                RHAP_UI.MAIN_CONTROLS
-                                            ]}
-                                            showJumpControls={false}
-                                            customProgressBarSection={[ /* RHAP_UI.CURRENT_TIME */ ]}
-                                            customIcons={{play: <Icon name='volume up'/>, pause: <Icon name='volume up' color='orange'/>}}
-                                        />
+                                        <SimpleAudio src={`/v1/audio/mp3?annot_uuid=${result.annot_uuid}`} />
                                         <Link href={'/annotation/' + result.annot_uuid}>
                                             {result.annotation}
                                         </Link>
                                     </Table.Cell>
 
                                     <Table.Cell selectable style={{lineHeight: '1em'}}>
-                                        <AudioPlayer
-                                            src={`${API_URL}/v1/audio/mp3?file_uuid=${result.file_uuid}&start_sec=${result.match_start_sec}&end_sec=${result.match_end_sec}`}
-                                            layout='horizontal'
-                                            customControlsSection={[
-                                                RHAP_UI.MAIN_CONTROLS
-                                            ]}
-                                            showJumpControls={false}
-                                            customProgressBarSection={[ /* RHAP_UI.CURRENT_TIME */ ]}
-                                            customIcons={{play: <Icon name='volume up'/>, pause: <Icon name='volume up' color='orange'/>}}
-                                        />
+                                        <SimpleAudio src={`/v1/audio/mp3?file_uuid=${result.file_uuid}&start_sec=${result.match_start_sec}&end_sec=${result.match_end_sec}`} />
                                         <Link href={'/audio/' + result.file_uuid}>
                                         {isLoading4 ? result.file_uuid : fileList.filter((f) => f.file_uuid == result.file_uuid)[0].upload_filename}
                                         </Link>

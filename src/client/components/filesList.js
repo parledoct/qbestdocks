@@ -7,20 +7,18 @@ import { fuse } from './fuse.js'
 import { useFileList } from './swr.js'
 import SimpleAudio from './simpleAudio.js'
 
-const annotationsList = ({ annotations }) => {
-    const [ displayAnnotations, setDisplayAnnotations ] = useState([])
-    const { fileList, isLoading: isLoading4 } = useFileList()
+const filesList = ({ files }) => {
+    const [ displayFiles, setDisplayFiles ] = useState([])
+    //const { fileList, isLoading: isLoading4 } = useFileList()
 
     // Add file upload name to each result
-    let refine = (rarray) => rarray.map(r => {return {...r, upload_filename: fileList.filter((f) => f.file_uuid == r.file_uuid)[0].upload_filename}; })
+    //let refine = (rarray) => rarray.map(r => {return {...r, upload_filename: fileList.filter((f) => f.file_uuid == r.file_uuid)[0].upload_filename}; })
 
     useEffect(() => {
-        let newAnnotations = refine(annotations)
-        fuse.setCollection(newAnnotations)
-        setDisplayAnnotations(newAnnotations)
-    }, [annotations]);
+        fuse.setCollection(files)
+        setDisplayFiles(files)
+    }, [files]);
 
-    console.log(displayAnnotations)
     return (
         <React.Fragment>
         <Search
@@ -28,36 +26,36 @@ const annotationsList = ({ annotations }) => {
             onSearchChange={(e, { value }) => {
                 if (value.length) {
                     let fuse_results = fuse.search(value).map(search_result => search_result.item)
-                    if (fuse_results.length > 0) setDisplayAnnotations(fuse_results)
+                    if (fuse_results.length > 0) setDisplayFiles(fuse_results)
                 }
                 else {
-                    setDisplayAnnotations(refine(annotations))
+                    setDisplayFiles(files)
                 }
             }}
             resultRenderer={null}
             showNoResults={false}
             minCharacters={2}
-            placeholder={'Filter annotations'}
+            placeholder={'Filter files'}
         />
         <List selection>
-            {displayAnnotations.map((annotation) => (
-                <Link href={'/annotation/' + annotation.annot_uuid } key={annotation.annot_uuid}>
-                <List.Item key={annotation.annot_uuid}>
-                    <SimpleAudio src={`/v1/audio/mp3?annot_uuid=${annotation.annot_uuid}`} />
+            {displayFiles.map((file) => (
+                <Link href={'/audio/' + file.file_uuid } key={file.file_uuid}>
+                <List.Item key={file.file_uuid}>
+                    <SimpleAudio src={`/v1/audio/mp3?file_uuid=${file.file_uuid}`} />
                     <List.Content>
                         <List.Header>
-                        {annotation.annotation}
+                        {file.upload_filename}
                         </List.Header>
                         <List.Description>
-                         in {annotation.upload_filename}
+                         # {file.file_uuid}
                         </List.Description>
                     </List.Content>
                 </List.Item>
                 </Link>
             ))}
-            {annotations.length === 0 ? <p>No annotations yet.</p>: ''}
+            {files.length === 0 ? <p>No files yet.</p>: ''}
         </List>
         </React.Fragment>
     );
 }
-export default annotationsList
+export default filesList

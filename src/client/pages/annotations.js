@@ -18,6 +18,7 @@ const Annotations = ({ annotations }) => {
             <Header as='h1'>
                 Browse existing annotations
             </Header>
+            <p>Click on an annotation to see its details and edit it. Click on the audio icon to play it.</p>
             <AnnotationsList annotations={annotations} />
         </Layout>
     );

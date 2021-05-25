@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, Transition, Step, Table, Card } from 'semantic-ui-react'
 import React, { useRef, useEffect, Component, useState } from "react";
 import Layout from '../components/layout.js'
+import FilesList from '../components/filesList.js'
 
 const AudioFiles = ({ files }) => {
     console.log('AudioFiles', files)
@@ -18,17 +19,8 @@ const AudioFiles = ({ files }) => {
             <Header as='h1'>
                 Browse existing audio files
             </Header>
-            Click on a file to see more details (annotations) and listen to it.
-            <List selection>
-                {files.map((file) => (
-                    <Link href={'/audio/' + file.file_uuid } key={file.file_uuid}>
-                    <List.Item>
-                        <Icon name='file' />
-                        {file.upload_filename}
-                    </List.Item>
-                    </Link>
-                ))}
-            </List>
+            <p>Click on a file to see more details (annotations) and listen to it.</p>
+            <FilesList files={files} />
         </Layout>
     );
 }
