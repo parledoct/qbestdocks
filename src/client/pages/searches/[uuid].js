@@ -28,7 +28,7 @@ const SearchStatus = () => {
     //console.log(direction, column, results)
     //console.log(searchAnnotations)
     // Add file upload name to each result
-    let refine = (rarray) => rarray.map(r => {return {...r, upload_filename: fileList.filter((f) => f.file_uuid == r.file_uuid)[0].upload_filename}; })
+    let refine = (rarray) => rarray.map(r => {return {...r, upload_filename: isLoading4 ? '' : fileList.filter((f) => f.file_uuid == r.file_uuid)[0].upload_filename}; })
 
     // Update state results when necessary
     useEffect(() => {
