@@ -92,6 +92,16 @@ def get_annotation(db: Session, annot_uuid: UUID = None):
 def get_file_annotations(db: Session, file_uuid: UUID = None):
     return db.query(Annotation).filter_by(file_uuid=file_uuid).all()
 
+def get_search_annotations(db: Session, search_uuid: UUID = None):
+    results = db.execute(f"""\
+        SELECT a.annot_uuid, a.start_sec, a.end_sec, a.annotation, a.file_uuid
+        FROM search_annots s
+        LEFT JOIN annotations a ON s.annot_uuid = a.annot_uuid
+        WHERE s.search_uuid = '{search_uuid}'
+    """).fetchall()
+
+    return results
+
 def create_annotation(db: Session, file_uuid: UUID, start_sec: float, end_sec: float, annotation: str):
     new_annotation = Annotation(
         annot_uuid = uuid4(),

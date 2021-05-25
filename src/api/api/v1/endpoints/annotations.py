@@ -20,14 +20,14 @@ async def get_all_annotations(request: Request, db: Session = Depends(get_db)):
     return [ AnnotationOut(**annotation.__dict__) for annotation in annotations ]
 
 @router.get("/", summary="Get annotation(s) associated with identifier", response_model=List[AnnotationOut], status_code=201)
-async def get_annotations(request: Request, file_uuid: str = None, annot_uuid: str = None, db: Session = Depends(get_db)):
+async def get_annotations(request: Request, file_uuid: UUID = None, annot_uuid: UUID = None, search_uuid: UUID = None, db: Session = Depends(get_db)):
     """
-    Get annotation(s) by file or annotation identifier, supply *either* `file_uuid` or `annot_uuid`. Note an array of size 1 is returned
+    Get annotation(s) by file or annotation identifier, supply *either* `file_uuid`, `annot_uuid`, or `search_uuid`. Note an array of size 1 is returned
     for when fetching via `annot_uuid`.
     """
 
-    if file_uuid is None and annot_uuid is None:
-        raise HTTPException(status_code=400, detail=f"Neither file_uuid nor annot_uuid provided for retrieval.")
+    if file_uuid is None and annot_uuid is None and search_uuid is None:
+        raise HTTPException(status_code=400, detail=f"Neither file_uuid, annot_uuid nor search_uuid provided for retrieval.")
 
     if file_uuid is not None:
 
@@ -36,14 +36,22 @@ async def get_annotations(request: Request, file_uuid: str = None, annot_uuid: s
 
         annotations = crud.get_file_annotations(db, file_uuid=file_uuid)
 
+        return [ AnnotationOut(**annotation.__dict__) for annotation in annotations ]
+
     elif annot_uuid is not None:
 
         if not crud.annotation_exists(db, annot_uuid):
                 raise HTTPException(status_code=404, detail=f"Annotation by identifier '{annot_uuid}' not found in annotations table.")
 
-        annotations = [crud.get_annotation(db, annot_uuid=annot_uuid)]
+        annotation = crud.get_annotation(db, annot_uuid=annot_uuid)
 
-    return [ AnnotationOut(**annotation.__dict__) for annotation in annotations ]
+        return [ AnnotationOut(**annotation.__dict__) ]
+
+    elif search_uuid is not None:
+
+        annotations = crud.get_search_annotations(db, search_uuid)
+
+        return [ AnnotationOut(**annotation._asdict()) for annotation in annotations ]
 
 @router.post("/update/", summary="Update annotations", response_model=List[AnnotationOut], status_code=201)
 async def update_annotations(request: Request, annotations: List[AnnotationIn], db: Session = Depends(get_db)):
