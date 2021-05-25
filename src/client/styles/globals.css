@@ -88,6 +88,7 @@ showtitle div {
 }
 
 div#minimap overview {
-    background-color: 'rgb(95 158 160)';
+    background-color: rgb(95,158,160);
     opacity: 0.5;
+    border: none!important;
 }

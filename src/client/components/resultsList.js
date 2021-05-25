@@ -4,19 +4,17 @@ import Link from 'next/link'
 import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, Transition, Step, Table, Card } from 'semantic-ui-react'
 import React, { useRef, useEffect, Component, useState } from "react";
 
-const annotationsList = ({ annotations }) => {
+const resultsList = ({ results }) => {
     return (
         <List selection>
-            {annotations.map((annotation) => (
-                <Link href={'/annotation/' + annotation.annot_uuid } key={annotation.annot_uuid}>
-                <List.Item key={annotation.annot_uuid}>
+            {results.map((result) => (
+                <List.Item key={result.result_uuid}>
                     <Icon name='file' />
-                    {annotation.annotation}
+                    {result.result_uuid}
                 </List.Item>
-                </Link>
             ))}
-            {annotations.length === 0 ? <p>No annotations yet.</p>: ''}
+            {results.length === 0 ? <p>No search results yet.</p>: ''}
         </List>
     );
 }
-export default annotationsList
+export default resultsList

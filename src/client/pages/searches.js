@@ -7,6 +7,8 @@ import Layout from '../components/layout.js'
 function Searches ({ searches }) {
     console.log(searches)
     console.log(process.env.API_URL)
+    const [ showDelete, setShowDelete ] = useState(false)
+
     return (
         <Layout active={'searches'}>
             <Link href='/searches/new'>
@@ -18,34 +20,40 @@ function Searches ({ searches }) {
             <Header as='h1'>
                 Browse existing searches
             </Header>
+            <p>Click on a search to see its details.</p>
+            <List selection divided relaxed>
+            {searches.map((search) => (
+                <List.Item key={search.search_uuid} positive={search.status == 'SUCCESS'} warning={search.status == 'PENDING'} negative={search.status == 'FAILURE'}>
+                    {(search.status == 'SUCCESS') ?
+                    <List.Icon name='check' color='green' size='large' verticalAlign='middle' />
+                    : ((search.status == 'PENDING') ?
+                    <List.Icon name='circle' size='large' verticalAlign='middle' />
+                    :
+                    <List.Icon name='cross' color='red' size='large' verticalAlign='middle' />
+                    )}
+                    <List.Content verticalAlign='middle'>
+                        <Link href={'/searches/' + search.search_uuid}>
+                        <List.Header onMouseEnter={(e) => setShowDelete(true)} onMouseLeave={() => setShowDelete(false)}>
+                            {search.search_uuid}
+                            <Button
+                                basic
+                                style={{visibility: showDelete ? 'visible' : 'hidden', marginLeft: '3em'}}
+                                onClick={(e) => {
+                                    console.log('click');
+                                    e.stopPropagation();
+                                }}
+                                color='red' size='tiny'>
+                                Delete
+                            </Button>
+                        </List.Header>
+                        </Link>
+                        <List.Description>
 
-            <Table celled>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell>UUID</Table.HeaderCell>
-                        <Table.HeaderCell>Name</Table.HeaderCell>
-                        <Table.HeaderCell>Status</Table.HeaderCell>
-                        <Table.HeaderCell>Actions</Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {searches.map((search) => (
-                        <Table.Row key={search.search_uuid} positive={search.status == 'SUCCESS'} warning={search.status == 'PENDING'} negative={search.status == 'FAILURE'}>
-                            <Table.Cell>
-                                {search.search_uuid}
-                            </Table.Cell>
-                            <Table.Cell/>
-                            <Table.Cell>
-                                {search.status}
-                            </Table.Cell>
-                            <Table.Cell>
-                                <Link href={'/searches/' + search.search_uuid}><Button color='blue' icon><Icon name='folder open outline'/></Button></Link>
-                                <Button color='red' icon><Icon name='delete'/></Button>
-                            </Table.Cell>
-                        </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table>
+                        </List.Description>
+                    </List.Content>
+                </List.Item>
+            ))}
+            </List>
         </Layout>
     );
 }

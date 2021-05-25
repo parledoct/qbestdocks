@@ -24,11 +24,73 @@ export function useFileAnnotations (uuid) {
   }
 }
 
+export function useFileResults (uuid) {
+
+  const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/search/results/?file_uuid=${uuid}` : null, fetcher)
+  //console.log('api url', API_URL, process.env)
+  return {
+    results: data,
+    isLoading: !error && !data,
+    isError: error
+  }
+}
+
+export function useAnnotationResults (uuid) {
+
+  const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/search/results/?annot_uuid=${uuid}` : null, fetcher)
+  //console.log('api url', API_URL, process.env)
+  return {
+    results: data,
+    isLoading: !error && !data,
+    isError: error
+  }
+}
+
 export function useFile (uuid) {
   const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/audio/get/${uuid}` : null, fetcher)
 
   return {
     file: data,
+    isLoading: !error && !data,
+    isError: error
+  }
+}
+
+export function useFileList () {
+  const { data, error } = useSWR(`${API_URL}/v1/audio/list`, fetcher)
+
+  return {
+    fileList: data,
+    isLoading: !error && !data,
+    isError: error
+  }
+}
+
+export function useSearch (uuid) {
+  const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/search/get/${uuid}` : null, fetcher)
+
+  return {
+    search: data,
+    isLoading: !error && !data,
+    isError: error
+  }
+}
+
+export function useSearchStatus (uuid) {
+  const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/search/status/${uuid}` : null, fetcher)
+
+  return {
+    status: data,
+    isLoading: !error && !data,
+    isError: error
+  }
+}
+
+export function useSearchResults (uuid) {
+  const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/search/results/?search_uuid=${uuid}` : null, fetcher)
+
+  return {
+    results: data,
     isLoading: !error && !data,
     isError: error
   }
