@@ -92,3 +92,35 @@ div#minimap overview {
     opacity: 0.5;
     border: none!important;
 }
+
+.rhap_container {
+    box-shadow: none!important;
+    width: auto!important;
+    padding: 0!important;
+    display: inline!important;
+    float: left;
+    background-color: transparent;
+}
+// td.selectable:has(.rhap_container) {
+//     line-height: 1em;
+// }
+
+.rhap_play-pause-button {
+    font-size: 1.5em!important;
+}
+
+.rhap_progress-section {
+    display: none!important;
+}
+.rhap_main-controls {
+    display: inline!important;
+}
+.rhap_main {
+    width: auto;
+    display: inline!important;
+    flex: none!important;
+}
+.rhap_controls-section {
+    display: inline!important;
+    flex: none!important;
+}

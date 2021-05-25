@@ -6,7 +6,10 @@ import { Container, Header, Icon, Grid, Form, TextArea, List, Segment,
 import { useSearch, useSearchStatus, useSearchResults, useFileList } from '../../components/swr.js'
 import React, { useRef, useEffect, Component, useState } from "react";
 import Fuse from 'fuse.js'
+import AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
+import { API_URL } from '../../components/apiUrl.js'
 
+/* Define Fuse.js instance */
 const options = {
     includeScore: true,
     minMatchCharLength: 2,
@@ -33,8 +36,10 @@ const SearchStatus = () => {
 
     console.log(direction, column, results)
 
+    // Add file upload name to each result
     let refine = (rarray) => rarray.map(r => {return {...r, upload_filename: fileList.filter((f) => f.file_uuid == r.file_uuid)[0].upload_filename}; })
 
+    // Update state results when necessary
     useEffect(() => {
         if (!isLoading3) {
             let refined_results = refine(rawResults)
@@ -43,10 +48,6 @@ const SearchStatus = () => {
             fuse.setCollection(refined_results)
         }
     }, [isLoading3])
-
-    // useEffect(() => {
-    //     fuse.setCollection(results)
-    // }, [results])
 
     useEffect(() => {
         if (results !== undefined) {
@@ -102,6 +103,7 @@ const SearchStatus = () => {
                         }}
                         resultRenderer={null}
                         showNoResults={false}
+                        minCharacters={2}
                     />
                     <Table sortable celled striped>
                         <Table.Header>
@@ -130,13 +132,33 @@ const SearchStatus = () => {
                             {results.slice(resultsPerPage*(page - 1), resultsPerPage*page).map((result) => (
                                 <Table.Row key={result.result_uuid} id={result.result_uuid}>
 
-                                    <Table.Cell selectable>
+                                    <Table.Cell selectable style={{lineHeight: '1em'}}>
+                                        <AudioPlayer
+                                            src={`${API_URL}/v1/audio/mp3?annot_uuid=${result.annot_uuid}`}
+                                            layout='horizontal'
+                                            customControlsSection={[
+                                                RHAP_UI.MAIN_CONTROLS
+                                            ]}
+                                            showJumpControls={false}
+                                            customProgressBarSection={[ /* RHAP_UI.CURRENT_TIME */ ]}
+                                            customIcons={{play: <Icon name='volume up'/>, pause: <Icon name='volume up' color='orange'/>}}
+                                        />
                                         <Link href={'/annotation/' + result.annot_uuid}>
-                                        {result.annotation}
+                                            {result.annotation}
                                         </Link>
                                     </Table.Cell>
 
-                                    <Table.Cell selectable>
+                                    <Table.Cell selectable style={{lineHeight: '1em'}}>
+                                        <AudioPlayer
+                                            src={`${API_URL}/v1/audio/mp3?file_uuid=${result.file_uuid}&start_sec=${result.match_start_sec}&end_sec=${result.match_end_sec}`}
+                                            layout='horizontal'
+                                            customControlsSection={[
+                                                RHAP_UI.MAIN_CONTROLS
+                                            ]}
+                                            showJumpControls={false}
+                                            customProgressBarSection={[ /* RHAP_UI.CURRENT_TIME */ ]}
+                                            customIcons={{play: <Icon name='volume up'/>, pause: <Icon name='volume up' color='orange'/>}}
+                                        />
                                         <Link href={'/audio/' + result.file_uuid}>
                                         {isLoading4 ? result.file_uuid : fileList.filter((f) => f.file_uuid == result.file_uuid)[0].upload_filename}
                                         </Link>
