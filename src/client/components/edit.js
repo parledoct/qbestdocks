@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, Table, Select } from 'semantic-ui-react'
+import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, Table, Select, Input } from 'semantic-ui-react'
 import React, { useRef, useEffect, Component, useState } from "react";
 import Audio from './audio.js'
 import axios from 'axios'
@@ -18,6 +18,10 @@ function Edit(props) {
     const [regions, setRegions] = useState(props.files.map((f) => []))
     //console.log('file current', fileIndex, files[fileIndex])
     console.log('region current', regions, fileIndex)
+
+    let updateLabel = (id, text) => setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [ ...prevRegions[fileIndex].slice(0, id), { ...prevRegions[fileIndex][id], label: text }, ...prevRegions[fileIndex].slice(id+1)], ...prevRegions.slice(fileIndex+1)]);
+    let updateStart = (id, start) => setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, id), { ...prevRegions[fileIndex][id], start: start }, ...prevRegions[fileIndex].slice(id+1)], ...prevRegions.slice(fileIndex+1)]);
+    let updateEnd = (id, end) => setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, id), { ...prevRegions[fileIndex][id], end: end }, ...prevRegions[fileIndex].slice(id+1)], ...prevRegions.slice(fileIndex+1)]);
 
     return (
         <div>
@@ -50,8 +54,8 @@ function Edit(props) {
                                     console.log('adding', regions)
 
                                     setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), prevRegions[fileIndex].concat([{
-                                                start: x.start,
-                                                end: x.end,
+                                                start: x.start.toFixed(4),
+                                                end: x.end.toFixed(4),
                                                 label: "New query",
                                                 file_id: fileIndex
                                             }]), ...prevRegions.slice(fileIndex+1)])
@@ -61,13 +65,16 @@ function Edit(props) {
                                         setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, x.id), ...prevRegions[fileIndex].slice(x.id+1)], ...prevRegions.slice(fileIndex+1)]);
                                     }
                                     else {
-                                        setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [...prevRegions[fileIndex].slice(0, x.id), { ...prevRegions[fileIndex][x.id], start: x.start, end: x.end }, ...prevRegions[fileIndex].slice(x.id+1)], ...prevRegions.slice(fileIndex+1)]);
+                                        updateStart(x.id, x.start)
+                                        updateEnd(x.id, x.end)
+                                        console.log(x.start, x.end)
                                     }
                                 }
                             }}
                             updateRegionLabel={(id, text) => {
                                 console.log('update label', id , text)
-                                setRegions(prevRegions => [...prevRegions.slice(0, fileIndex), [ ...prevRegions[fileIndex].slice(0, id), { ...prevRegions[fileIndex][id], label: text }, ...prevRegions[fileIndex].slice(id+1)], ...prevRegions.slice(fileIndex+1)])
+                                updateLabel(id, text)
+
                             }}
                         />
             )}
@@ -82,7 +89,10 @@ function Edit(props) {
                             Text label
                         </Table.HeaderCell>
                         <Table.HeaderCell>
-                            Audio bounds (sec)
+                            Audio start (sec)
+                        </Table.HeaderCell>
+                        <Table.HeaderCell>
+                            Audio end (sec)
                         </Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
@@ -92,8 +102,21 @@ function Edit(props) {
                     {region !== undefined && region.map((query, queryIdx) => (
                         <Table.Row key={queryIdx}>
                             <Table.Cell>{props.files[query.file_id].upload_filename}</Table.Cell>
-                            <Table.Cell>{query.label}</Table.Cell>
-                            <Table.Cell>{query.start.toFixed(4)}-{query.end.toFixed(4)}</Table.Cell>
+                            <Table.Cell>
+                                <Input transparent fluid icon='pencil' value={query.label}
+                                    onChange={(event, { value }) => updateLabel(queryIdx, value)}
+                                />
+                            </Table.Cell>
+                            <Table.Cell>
+                                <Input transparent fluid icon='pencil' type='number' value={query.start}
+                                    onChange={(event, { value }) => updateStart(queryIdx, Number(value))}
+                                />
+                            </Table.Cell>
+                            <Table.Cell>
+                                <Input transparent fluid icon='pencil' type='number' value={query.end}
+                                    onChange={(event, { value }) => updateEnd(queryIdx, Number(value))}
+                                />
+                            </Table.Cell>
                         </Table.Row>
                     ))}
                     </React.Fragment>

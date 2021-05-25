@@ -7,7 +7,7 @@ import { fuse } from './fuse.js'
 import { useFileList } from './swr.js'
 import SimpleAudio from './simpleAudio.js'
 
-const annotationsList = ({ annotations }) => {
+const annotationsList = ({ annotations, asList = true, selectedAnnotations = [], toggleAnnotation }) => {
     const [ displayAnnotations, setDisplayAnnotations ] = useState([])
     const { fileList, isLoading: isLoading4 } = useFileList()
 
@@ -38,7 +38,9 @@ const annotationsList = ({ annotations }) => {
             showNoResults={false}
             minCharacters={2}
             placeholder={'Filter annotations'}
+            style={{marginBottom: '1em'}}
         />
+        {asList ?
         <List selection>
             {displayAnnotations.map((annotation) => (
                 <Link href={'/annotation/' + annotation.annot_uuid } key={annotation.annot_uuid}>
@@ -57,6 +59,28 @@ const annotationsList = ({ annotations }) => {
             ))}
             {annotations.length === 0 ? <p>No annotations yet.</p>: ''}
         </List>
+        :
+        <Card.Group style={{marginBottom: '1em'}}>
+        {displayAnnotations.map((annotation) => (
+            <Card link
+                style={{padding: 10, backgroundColor: (selectedAnnotations.indexOf(annotation.annot_uuid) >= 0) ? '#21ba45' : ''}}
+                key={annotation.annot_uuid}
+                onClick={() => toggleAnnotation(annotation.annot_uuid)}
+                color={(selectedAnnotations.indexOf(annotation.annot_uuid) >= 0) ? 'green' : ''}
+            >
+                <Card.Content>
+                    <Card.Header>
+                        <SimpleAudio src={`/v1/audio/mp3?annot_uuid=${annotation.annot_uuid}`} />
+                        {annotation.annotation}
+                    </Card.Header>
+                    <Card.Meta>
+                        From file {isLoading4 ? annotation.file_uuid : fileList.filter(f => f.file_uuid == annotation.file_uuid)[0].upload_filename}
+                    </Card.Meta>
+                </Card.Content>
+            </Card>
+        ))}
+        </Card.Group>
+        }
         </React.Fragment>
     );
 }

@@ -3,14 +3,21 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { Container, Header, Icon, Grid, Form, TextArea, List, Segment, Button, Transition, Step, Table, Card } from 'semantic-ui-react'
 import React, { useRef, useEffect, Component, useState } from "react";
+import { useFileList } from '../../components/swr.js'
 import Audio from '../../components/audio.js'
 import axios from 'axios'
 import { API_URL } from '../../components/apiUrl.js'
+import Layout from '../../components/layout.js'
+import BackButton from '../../components/backButton.js'
+import SimpleAudio from '../../components/simpleAudio.js'
+import AnnotationsList from '../../components/annotationsList.js'
 
 const NewSearch = ({ files, annotations }) => {
     const [selectedFiles, setSelectedFiles] = useState([])
     const [selectedAnnotations, setSelectedAnnotations] = useState([])
     const router = useRouter()
+
+    const { fileList, isLoading: isLoading4 } = useFileList()
 
     console.log('NewSearch', annotations, selectedFiles)
     let toggleFile = (uuid) => {
@@ -36,14 +43,8 @@ const NewSearch = ({ files, annotations }) => {
         setSelectedAnnotations(newAnnotations)
     }
     return (
-        <Grid style={{ height: '100vh' }} verticalAlign='middle' centered>
-            <Head>
-              <title>QBE-STD</title>
-              <link rel="icon" href="/favicon.ico" />
-            </Head>
-
-            <Grid.Column>
-                <Container text>
+        <Layout active={'searches'}>
+            <BackButton />
                     <Header as='h1'>
                         Configure new search
                     </Header>
@@ -79,36 +80,9 @@ const NewSearch = ({ files, annotations }) => {
                     <Header as='h2'>
                         Select queries
                     </Header>
-                    {annotations.map((annotation) => (
-                        <Card fluid link
-                            style={{padding: 10, backgroundColor: (selectedAnnotations.indexOf(annotation.annot_uuid) >= 0) ? '#21ba45' : ''}}
-                            key={annotation.annot_uuid}
-                            onClick={() => toggleAnnotation(annotation.annot_uuid)}
-                            color={(selectedAnnotations.indexOf(annotation.annot_uuid) >= 0) ? 'green' : ''}
-                        >
-                            <Card.Content>
-                                <Card.Header>
-                                    {annotation.annotation}
-                                </Card.Header>
-                                <Card.Meta>
-                                    From file #{annotation.file_uuid}
-                                </Card.Meta>
-                                <Card.Description>
-                                    <Audio
-                                        key={annotation.annot_uuid}
-                                        file={'/v1/audio/mp3?file_uuid=' + annotation.file_uuid + '&start_sec=' + annotation.start_sec + '&end_sec=' + annotation.end_sec + '&annot_uuid=' + annotation.annot_uuid}
-                                    />
-                                </Card.Description>
-                            </Card.Content>
-                        </Card>
-                    ))}
+                    <p>Click on queries to select them for the search.</p>
+                    <AnnotationsList annotations={annotations} asList={false} toggleAnnotation={toggleAnnotation} selectedAnnotations={selectedAnnotations} />
 
-                    <Link href='/searches'>
-                        <Button color='blue'>
-                            <Icon name='left arrow' />
-                            Back
-                        </Button>
-                    </Link>
                     <Button color='green' floated='right' onClick={() => axios.post(API_URL + '/v1/search/', {
                         file_uuids: selectedFiles,
                         annot_uuids: selectedAnnotations
@@ -119,9 +93,7 @@ const NewSearch = ({ files, annotations }) => {
                         <Icon name='cogs' />
                         Submit search
                     </Button>
-                </Container>
-            </Grid.Column>
-        </Grid>
+        </Layout>
     );
 }
 
