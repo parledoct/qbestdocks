@@ -72,3 +72,14 @@ async def get_search_results(request: Request, annot_uuids: List[UUID] = None, f
     matches = crud.get_search_results(db, annot_uuids, file_uuids, search_uuid)
 
     return [ SearchResult(**dict(match)) for match in matches ]
+
+@router.post("/flag/{result_uuid}/{new_flag}", summary="Flag search result", status_code=201)
+async def flag_search_result(request: Request, result_uuid: UUID, new_flag: int, db: Session = Depends(get_db)):
+
+    """
+    Set flag (1 = accept, 0 = reject) for a search result
+    """
+
+    crud.flag_search_result(db, result_uuid, new_flag)
+
+    return None

@@ -131,6 +131,11 @@ def update_annotation(db: Session, annot_uuid: UUID, start_sec: float, end_sec: 
 
 def delete_annotation(db: Session, annot_uuid: UUID):
 
+    db.execute(f"""\
+        UPDATE search_jobs SET annot_uuids = array_remove(annot_uuids, '{annot_uuid}')
+    """)
+
+    db.query(SearchResult).filter_by(annot_uuid=annot_uuid).delete()
     db.query(Annotation).filter_by(annot_uuid=annot_uuid).delete()
     db.commit()
 
@@ -192,6 +197,8 @@ def create_search_job(db: Session, annot_uuids: List[UUID], file_uuids: List[UUI
 
     return new_job.search_uuid
 
+#region Operations on search_results table
+
 def create_search_result(db: Session, search_uuid: UUID, annot_uuid: UUID, test_uuid: UUID, sim_score: float, match_start: float, match_end: float):
     new_result = SearchResult(
         result_uuid = uuid4(),
@@ -210,6 +217,14 @@ def create_search_result(db: Session, search_uuid: UUID, annot_uuid: UUID, test_
     db.commit()
     db.refresh(new_result)
 
+#endregion
+
+def flag_search_result(db: Session, result_uuid: UUID, new_flag: int):
+
+    db.query(SearchResult).filter_by(result_uuid=result_uuid).update({ SearchResult.result_flag:new_flag })
+    db.commit()
+
+    return None
 #endregion
 
 #region Other (i.e. more complex) queries
