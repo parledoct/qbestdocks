@@ -5,6 +5,7 @@ import React, { useRef, useEffect, Component, useState } from "react";
 import Edit from '../components/edit.js'
 import { useRouter } from 'next/router'
 import { API_URL } from '../components/apiUrl.js'
+import useWindowDimensions from '../components/window.js'
 
 import Uppy from '@uppy/core'
 import GoogleDrive from '@uppy/google-drive'
@@ -18,6 +19,7 @@ function Upload() {
     const [step, setStep] = useState(1)
     const [collection, setCollection] = useState("")
     const [searchFiles, setSearchFiles] = useState([])
+    const { height, width } = useWindowDimensions()
 
     const searchUploader = useUppy(() => {
         return new Uppy({
@@ -74,7 +76,7 @@ function Upload() {
                 </Header>
 
                 <Segment>
-                    <Dashboard id="step1" uppy={searchUploader} height={200} />
+                    <Dashboard id="step1" uppy={searchUploader} height={ height/2 } />
                 </Segment>
                 <Button color='blue' onClick={() => router.back()}>
                     <Icon name='left arrow' />
