@@ -6,7 +6,7 @@ import React, { useRef, useEffect, Component, useState } from "react";
 import { API_URL } from './apiUrl.js'
 import { formatTimeCallback, timeInterval, primaryLabelInterval, secondaryLabelInterval } from './formatTimeline.js'
 
-let updateRegions = (wavesurfer, json) => {
+let updateRegions = (wavesurfer, json, resize) => {
     //Promise.resolve(wavesurfer).then((wavesurfer) => {
         if (wavesurfer !== undefined && json !== undefined) {
             wavesurfer.clearRegions();
@@ -17,7 +17,7 @@ let updateRegions = (wavesurfer, json) => {
                     end: region.end,
                     loop: false,
                     drag: false,
-                    resize: true,
+                    resize: resize,
                     color: "rgba(255, 215, 0, 0.2)",
                     attributes: {
                         label: region.label,
@@ -50,8 +50,11 @@ function Audio(props) {
     const sliderRef = useRef();
     const minimapRef = useRef();
     const [ zoom, setZoom ] = useState(50);
+    const [ isPlaying, setIsPlaying ] = useState(false);
     const zoomStep = props.zoomStep || 20; // FIXME make it adaptive to file duration
     const detailedAudio = props.detailed !== undefined ? props.detailed : false;
+
+    const enableAnnotations = props.enableAnnotations !== undefined ? props.enableAnnotations : true;
 
     const waveform = useRef(undefined);
     let wavesurfer = waveform.current;
@@ -89,7 +92,8 @@ function Audio(props) {
           }),
           CursorPlugin.create({
               showTime: true,
-              opacity: 1
+              opacity: 1,
+              customShowTimeStyle: { color: 'black' }
           }),
       ]
       if (detailedAudio) {
@@ -122,7 +126,7 @@ function Audio(props) {
           waveColor: 'violet',
           progressColor: 'purple',
           mediaControls: true,
-          backend: 'MediaElement',
+          backend: 'WebAudio',//'MediaElement',
           fillParent: true,
           plugins: wsPlugins
         });
@@ -132,15 +136,20 @@ function Audio(props) {
         // reader.readAsDataURL(props.file)
         ws.load(`${API_URL}${props.file}`);
 
-        ws.enableDragSelection({
-            minLength: 0.01,
-            loop: false,
-            drag: false,
-            resize: true,
-            attributes: {new: true}
-        })
+        if (enableAnnotations) {
+            ws.enableDragSelection({
+                minLength: 0.01,
+                loop: false,
+                drag: false,
+                resize: true,
+                attributes: {new: true}
+            })
+        }
+
+        ws.on('error', (err) => console.log('error', err))
+
         ws.on('region-created', (e) => {
-            console.log('e', e)
+            console.log('region created e', e)
             var el = document.createElement('span');
             el.innerHTML += 'x';
             el.className = "closeButton";
@@ -186,18 +195,27 @@ function Audio(props) {
 
         ws.on('region-update-end', (e) => {
             props.updateAnnotatedRegions(e);
+            console.log('updating regions')
+        })
+
+        ws.on('finish', (e) => {
+            setIsPlaying(false)
         })
 
         ws.on('region-click', (region, event) => {
             event.stopPropagation();
+            event.preventDefault();
+            console.log('you clicked on region ', region.start, region.end)
             region.play();
+            //ws.seekTo(region.start / ws.getDuration());
+            //ws.skip(region.start)
+            //ws.play(region.start, region.end);
         });
 
         // sliderRef.current.oninput = function (event) {
         //     ws.zoom(Number(event.target.value));
         // };
-
-        updateRegions(ws, props.annotatedRegions);
+        updateRegions(ws, props.annotatedRegions, props.enableAnnotations);
         console.log("factory done", Object.keys(ws.regions.list))
         // return () => {
         //     ws.destroy();
@@ -207,7 +225,7 @@ function Audio(props) {
 
         ws.on('ready', () => {
             setZoom(Math.trunc(ws.drawer.getWidth() /ws.getDuration() / ws.params.pixelRatio));
-            console.log(ws.drawer.getWidth(), ws.getDuration(), ws.params, Math.trunc(ws.drawer.getWidth() /ws.getDuration() / ws.params.pixelRatio))
+            console.log('ready', ws.drawer.getWidth(), ws.getDuration(), ws.params, Math.trunc(ws.drawer.getWidth() /ws.getDuration() / ws.params.pixelRatio))
 
         })
         //var slider = document.getElementById("myRange");
@@ -228,7 +246,7 @@ function Audio(props) {
     useEffect(() => {
         if (waveform.current !== undefined) {
             console.log('useEffect, update regions')
-            updateRegions(waveform.current, props.annotatedRegions)
+            updateRegions(waveform.current, props.annotatedRegions, props.enableAnnotations)
         }
     }, [props.annotatedRegions]);
 
@@ -238,6 +256,8 @@ function Audio(props) {
             waveform.current.zoom(Math.max(0, zoom))
         }
     }, [zoom])
+
+    //{ (waveform.current !== undefined) ? (waveform.current.getCurrentTime().toPrecision(3).toString() + ' / ' + waveform.current.getDuration().toPrecision(3).toString()) : ''}
 
     return (
         <div style={{marginTop: 10}}>
@@ -249,8 +269,17 @@ function Audio(props) {
                 <Icon name='zoom-out' onClick={() => setZoom(prevZoom => Math.max(prevZoom - zoomStep, 0))} />
             </div>
             : '' }
+
         </div>
-        <div ref={minimapRef} id='minimap' style={{width: '100%'}} />
+
+        <div ref={minimapRef} id='minimap' style={{width: '100%', marginTop: 10}} />
+
+        <Segment basic textAlign={"center"}>
+            <Button color={"blue"} circular icon={isPlaying ? 'pause' : 'play'}
+                onClick={() => { if(waveform.current !== undefined) { waveform.current.playPause(); setIsPlaying(true); } }}
+                style={{ }}
+            />
+        </Segment>
 
         </div>
     );

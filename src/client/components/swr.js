@@ -16,20 +16,13 @@ export function useAnnotation (uuid) {
 }
 
 export function useSearchAnnotations (uuid) {
-  const { search, isLoading, isError } = useSearch(uuid)
-  let annotations = []
-  if (!isLoading) {
-      annotations = search.annot_uuids.map((annot_uuid) => {
-          let { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/annotations/?annot_uuid=${uuid}` : null, fetcher)
-          return [data, error]
-      })
-  }
-  console.log(annotations.map((x) => !x[1] && !x[0]))
-  return {
-    searchAnnotations: annotations.map((x) => (x[0] && x[0].length) ? x[0][0] : {}),
-    isLoading: isLoading || annotations.some((x) => !x[1] && !x[0]),
-    isError: isError || annotations.some((x) => x[1])
-  }
+    const { data, error } = useSWR(uuid !== undefined ? `${API_URL}/v1/annotations/?search_uuid=${uuid}` : null, fetcher)
+    //console.log('api url', API_URL, process.env)
+    return {
+      searchAnnotations: data,
+      isLoading: !error && !data,
+      isError: error
+    }
 }
 
 export function useFileAnnotations (uuid) {

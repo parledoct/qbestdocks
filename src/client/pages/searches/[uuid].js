@@ -14,7 +14,7 @@ const SearchStatus = () => {
     const { uuid } = router.query
 
     const { search, isLoading } = useSearch(uuid)
-    //const { searchAnnotations, isLoading5 } = useSearchAnnotations(uuid)
+    const { searchAnnotations, isLoading: isLoading5 } = useSearchAnnotations(uuid)
     const { status, isLoading: isLoading2 } = useSearchStatus(uuid)
     const { results: rawResults, isLoading: isLoading3 } = useSearchResults(uuid)
     const { fileList, isLoading: isLoading4 } = useFileList()
@@ -69,14 +69,14 @@ const SearchStatus = () => {
                     </Header>
 
                     <Header as='h3'>Details of the search</Header>
-                    {isLoading ? <Loader / > :
+                    {(isLoading || isLoading5) ? <Loader / > :
                     <React.Fragment>
                     <Tab menu={{ secondary: true, pointing: true }} panes={[
                         {
                             menuItem: 'Selected annotations',
                             render: () => (
                                 <React.Fragment>
-                                    {search.annot_uuids.map((uuid) => <p><Link href={'/annotation/' + uuid}>{uuid}</Link></p>)}
+                                    {searchAnnotations.map((annot) => <p key={annot.annot_uuid}><Link href={'/annotation/' + annot.annot_uuid}>{annot.annotation}</Link></p>)}
                                 </React.Fragment>
                             )
                         },
@@ -84,7 +84,7 @@ const SearchStatus = () => {
                             menuItem: 'Selected audio files',
                             render: () => (
                                 <React.Fragment>
-                                    {search.file_uuids.map((uuid) => <p><Link href={'/audio/' + uuid}>{fileList.filter(f => f.file_uuid == uuid)[0].upload_filename}</Link></p>)}
+                                    {search.file_uuids.map((uuid) => <p key={uuid}><Link href={'/audio/' + uuid}>{fileList.filter(f => f.file_uuid == uuid)[0].upload_filename}</Link></p>)}
                                 </React.Fragment>
                             )
                         }
@@ -97,7 +97,6 @@ const SearchStatus = () => {
 
                     {(isLoading3 || results === undefined) ? <Loader/> :
                     <React.Fragment>
-
                     <div style={{float: 'right'}}>
                     Results per page:
                     <Dropdown style={{marginLeft: '1em'}} inline closeOnChange placeholder="Results per page" value={resultsPerPage} options={[
@@ -107,6 +106,7 @@ const SearchStatus = () => {
                     </div>
                     <Search
                         fluid
+                        style={{width: '60%'}}
                         onSearchChange={(e, { value }) => {
                             if (value.length) {
                                 let fuse_results = fuse.search(value).map(search_result => search_result.item)
@@ -121,6 +121,10 @@ const SearchStatus = () => {
                         minCharacters={2}
                         placeholder={'Filter results'}
                     />
+                    <div style={{flex: 1, flexDirection: 'row', justifyContent: 'space-between', flexBasis: 'content'}}>
+
+
+                    </div>
                     <Table sortable celled striped>
                         <Table.Header>
                             <Table.Row>

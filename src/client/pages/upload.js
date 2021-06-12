@@ -47,7 +47,6 @@ function Upload() {
         else {
             console.log('Error while uploading', response)
         }
-        router.back()
     });
     searchUploader.on('upload-error', (file, error, response) => console.log(error, response))
     // searchUploader.on('file-added', (file) => {
@@ -59,6 +58,7 @@ function Upload() {
         console.log('complete', result)
         if (result.failed.length === 0) {
             setSearchFiles(result.successful)
+            router.back()
         }
     })
 

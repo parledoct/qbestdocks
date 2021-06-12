@@ -54,6 +54,7 @@ function Searches ({ searches }) {
                 </List.Item>
             ))}
             </List>
+            {(searches.length == 0) ? <p><i>No searches in database yet.</i></p> : ''}
         </Layout>
     );
 }
