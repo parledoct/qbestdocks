@@ -144,7 +144,7 @@ const SearchStatus = () => {
                                     sorted={column == 'match_score' ? direction : null}
                                     onClick={() => { column == 'match_score' ? setDirection(prevDirection => (prevDirection == 'ascending') ? 'descending' : 'ascending') : setColumn('match_score') }}
                                 >
-                                    Score
+                                    Score &#40;Time region in file&#41;
                                 </Table.HeaderCell>
                             </Table.Row>
                         </Table.Header>
@@ -166,7 +166,7 @@ const SearchStatus = () => {
                                         </Link>
                                     </Table.Cell>
                                     <Table.Cell>
-                                        {result.match_score}
+                                        {result.match_score.toFixed(2)} ({result.match_start_sec.toFixed(2)} &#8211; {result.match_end_sec.toFixed(2)} s)
                                     </Table.Cell>
                                 </Table.Row>
                             ))}

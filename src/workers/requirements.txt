@@ -10,3 +10,4 @@ pyyaml==5.4.1
 argh==0.26.2
 sqlalchemy==1.4.11
 pydantic==1.8.1
+importlib-metadata<5.0

@@ -4,8 +4,12 @@ COPY requirements.txt /workers/requirements.txt
 
 WORKDIR /workers
 
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update && \
-	apt-get install -y ffmpeg
+	apt-get install -y ffmpeg \
+    libpq-dev \
+    gcc
 
 RUN apt-get update -yqq && \
     apt-get -yqq install libsndfile1 --no-install-recommends && \

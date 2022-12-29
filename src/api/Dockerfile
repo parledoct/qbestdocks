@@ -4,8 +4,12 @@ COPY requirements.txt /api/requirements.txt
 
 WORKDIR /api
 
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update && \
-	apt-get install -y ffmpeg
+    apt-get install -y ffmpeg \
+    libpq-dev \
+    gcc
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --compile -r requirements.txt && \
