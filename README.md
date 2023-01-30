@@ -12,6 +12,15 @@ This repository accompanies our QbE-STD evaluation experiments (https://github.c
 
 ## Implementation overview
 
+### Back-end
+
+The backend intentionally relies on a set of mature and well-maintained technologies (Docker, PostgreSQL, S3, Celery) that can easily interface with different programming languages and that are entirely agnostic to the choice of front-end and, with Celery as a task queue, also *relatively* agnostic to the language in which the API is implemented (there are Celery clients for Python, Node.js, PHP, and Go).
+An asynchronous task queue is necessary to deal with long-running tasks (e.g. running dynamic time warping based search on all pairs of query and corpus audio files).
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/parledoct/qbestdocks/master/docs/diagram.png">
+</p>
+
 ### Front-end
 
 The front-end (created by [Laura Dominé](https://temigo.github.io/)) lets the end user upload audio files to perform QbE searches:
@@ -31,15 +40,6 @@ The front-end (created by [Laura Dominé](https://temigo.github.io/)) lets the e
 4. View search results (time regions in the corpus audio files with high similarity to the search queries)
 
   ![](docs/04_search-results.png)
-
-### Back-end
-
-The backend intentionally relies on a set of mature and well-maintained technologies (Docker, PostgreSQL, S3, Celery) that can easily interface with different programming languages and that are entirely agnostic to the choice of front-end and, with Celery as a task queue, also *relatively* agnostic to the language in which the API is implemented (there are Celery clients for Python, Node.js, PHP, and Go).
-An asynchronous task queue is necessary to deal with long-running tasks (e.g. running dynamic time warping based search on all pairs of query and corpus audio files).
-
-<p align="center">
-<img src="https://raw.githubusercontent.com/parledoct/qbestdocks/master/docs/diagram.png">
-</p>
 
 ## Usage
 
